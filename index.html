@@ -267,11 +267,19 @@ async function ensureSup(url){
   const n=await q(sb.from(T.sup).insert({name:h,site:h}).select().single());
   D.suppliers.push(n);return n.id;
 }
+async function syncPos(url,excl){
+  const p=D.positions.find(x=>x.url===url);if(!p)return;
+  const rs=D.requests.filter(r=>r.url===url&&r.id!==excl&&r.status!=='new');
+  if(!rs.length){if(!p.manual)await q(sb.from(T.pos).delete().eq('id',p.id));return}
+  const w=rs.filter(r=>r.amount&&r.qty).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
+  await q(sb.from(T.pos).update({price:w?Math.round(w.amount/w.qty*100)/100:null}).eq('id',p.id));
+}
 async function setStatus(rs,k){
   rs=rs.filter(r=>r.status!==k);
   if(k!=='new')for(const r of rs)if(!r.sup_id)r.sup_id=await ensureSup(r.url);
   await Promise.all(rs.map(r=>q(sb.from(T.req).update({...statusPatch(r,k),sup_id:r.sup_id||null}).eq('id',r.id))));
   if(k!=='new')await Promise.all(rs.filter(r=>r.sup_id).map(upsertPos));
+  else for(const r of rs)await syncPos(r.url,r.id);
   return rs.length;
 }
 async function checkAdmin(){
@@ -421,7 +429,7 @@ function supView(){
       <label class="f">Нотатки<textarea data-sf="note">${esc(s.note)}</textarea></label></fieldset>`:''}
     <h2 style="margin:22px 0 8px;font-size:20px">Позиції, які замовляли (${pos.length})</h2>
     <table class="stack"><thead><tr><th>Позиція</th><th>Од.</th><th class="num">Остання ціна</th>${a?'<th class="num">Замовляли</th>':''}<th></th></tr></thead><tbody>
-    ${pos.map(p=>`<tr><td class="nm"><b>${esc(p.title)}</b><a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(host(p.url))} ↗</a></td><td>${esc(p.unit)}</td><td class="num">${money(p.price)||'—'}</td>${a?`<td class="num">${times(p)} раз</td>`:''}<td><button class="btn sm" data-reqpos="${p.id}">Замовити</button></td></tr>`).join('')||`<tr><td colspan="5" class="empty">Позиції з'являться тут автоматично, щойно заявку з цим постачальником візьмуть у роботу.</td></tr>`}
+    ${pos.map(p=>`<tr><td class="nm"><b>${esc(p.title)}</b><a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(host(p.url))} ↗</a></td><td>${esc(p.unit)}</td><td class="num">${money(p.price)||'—'}</td>${a?`<td class="num">${times(p)} раз</td>`:''}<td style="white-space:nowrap"><button class="btn sm" data-reqpos="${p.id}">Замовити</button> <button class="btn sm warn" data-delpos="${p.id}" aria-label="Видалити позицію">Видалити</button></td></tr>`).join('')||`<tr><td colspan="5" class="empty">Позиції з'являться тут автоматично, щойно заявку з цим постачальником візьмуть у роботу.</td></tr>`}
     </tbody></table>
     ${a?`<form id="npf" class="box"><legend>Додати позицію вручну</legend><div class="two"><label class="f">Назва<input id="np-t"></label><label class="f">Посилання<input id="np-u" type="url" placeholder="https://"></label></div><div class="two"><label class="f">Од.<select id="np-un">${opts(UNITS.map(x=>[x,x]),'шт')}</select></label><label class="f">Ціна, грн<input id="np-p" type="number" step="0.01" min="0"></label></div><div class="acts"><button class="btn">Додати</button></div></form>`:''}
   </main></div>`;
@@ -549,7 +557,8 @@ document.addEventListener('click',e=>{
   if(el=c('[data-showsup]')){U.tab='req';U.supF=el.dataset.showsup;U.group='all';U.status='all';render();return}
   if(el=c('[data-sup]')){U.sup=el.dataset.sup;render();return}
   if(el=c('[data-reqpos]')){const p=D.positions.find(x=>x.id===el.dataset.reqpos);newReq({title:p.title,url:p.url,sup:p.sup_id,unit:p.unit});return}
-  if(el=c('[data-del]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно видалити?';return}const id=el.dataset.del;U.sel.delete(id);closeOv();act(()=>q(sb.from(T.req).delete().eq('id',id)),'Заявку видалено');return}
+  if(el=c('[data-delpos]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно?';return}const id=el.dataset.delpos;act(()=>q(sb.from(T.pos).delete().eq('id',id)),'Позицію видалено з каталогу');return}
+  if(el=c('[data-del]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно видалити?';return}const id=el.dataset.del;U.sel.delete(id);closeOv();const dr=D.requests.find(x=>x.id===id);act(async()=>{await q(sb.from(T.req).delete().eq('id',id));if(dr)await syncPos(dr.url,id)},'Заявку видалено');return}
   if(t.matches('[data-ck],select,input,a')||c('a'))return;
   if(el=c('tr[data-id]')){openReq(el.dataset.id)}
 });
@@ -596,7 +605,7 @@ document.addEventListener('submit',async e=>{
   if(f.id==='ngf'){const n=val('ngn');if(!n)return;act(async()=>{const g=await q(sb.from(T.grp).insert({name:n}).select().single());U.group=g.id},'Групу створено');return}
   if(f.id==='ncf'){const n=val('ncn');if(!n)return;act(()=>q(sb.from(T.cat).insert({name:n})),'Категорію створено');return}
   if(f.id==='nsf'){const n=val('nsn');if(!n)return;act(async()=>{const s=await q(sb.from(T.sup).insert({name:n}).select().single());U.sup=s.id;U.sq=''});return}
-  if(f.id==='npf'){const t=val('np-t'),u=val('np-u');if(!t||!/^https?:\/\//.test(u)){toast('Вкажіть назву і посилання з https://');return}const row={sup_id:U.sup,title:t,url:u,unit:val('np-un')};if(val('np-p'))row.price=+val('np-p');act(()=>q(sb.from(T.pos).upsert(row,{onConflict:'url'})),'Позицію додано');return}
+  if(f.id==='npf'){const t=val('np-t'),u=val('np-u');if(!t||!/^https?:\/\//.test(u)){toast('Вкажіть назву і посилання з https://');return}const row={sup_id:U.sup,title:t,url:u,unit:val('np-un'),manual:true};if(val('np-p'))row.price=+val('np-p');act(()=>q(sb.from(T.pos).upsert(row,{onConflict:'url'})),'Позицію додано');return}
   if(f.id==='nrf'){
     const who=val('f-who'),err=$('#f-err');
     if(!who){err.textContent="Вкажіть своє ім'я.";return}
@@ -623,6 +632,7 @@ document.addEventListener('submit',async e=>{
       if((patch.status||r.status)!=='new'&&!patch.sup_id)patch.sup_id=await ensureSup(patch.url);
       await q(sb.from(T.req).update(patch).eq('id',r.id));
       const n={...r,...patch};if(n.status!=='new'&&n.sup_id)await upsertPos(n);
+      if(n.status==='new'||n.url!==r.url)await syncPos(r.url,r.id);
     }catch(err){$('#e-err').textContent='Не вдалося зберегти: '+(err.message||err);btn.disabled=false;return}
     closeOv();toast('Збережено');loadAll()}
 });
