@@ -121,13 +121,59 @@ tr.sec .btn{margin-inline-start:10px}
 .wait h3{margin:0 0 8px;font-size:17px}
 .wait ul{margin:0 0 12px;padding-inline-start:18px;font-size:15px}
 .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0 12px}
+.fab{display:none;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--acc);color:var(--accInk);font-size:30px;line-height:1;border:0;box-shadow:0 6px 18px rgb(0 0 0/.25);z-index:6;align-items:center;justify-content:center}
+.mgr{display:none}
+.late{color:#c2253d!important;font-weight:600}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:15px;z-index:30;transition:opacity .2s}
 .card{max-width:560px;margin:32px auto;padding:24px;border:1px solid var(--line);border-radius:14px}
 code{background:var(--soft);padding:1px 5px;border-radius:4px}
 footer{padding:16px max(3vw,16px);font-size:13px;color:var(--mute);border-top:1px solid var(--line);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}}
-@media(max-width:820px){.wrap,.sups{grid-template-columns:minmax(0,1fr)}.side,.sl{border-inline-end:0;border-bottom:1px solid var(--line)}.side{flex-direction:row;flex-wrap:wrap}.side h3,.hint{width:100%}.g{width:auto}.ng{width:100%}.who{margin-inline-start:0;width:100%}}
-@media(max-width:600px){table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mute);font-size:13px}.stack td:empty{display:none}.stack tr.sec{display:block}.stack tr.sec td{padding:8px}.stack tr.sec td::before{display:none}h1{font-size:26px}}
+@media(max-width:820px){
+ .wrap,.sups{grid-template-columns:minmax(0,1fr);min-height:0}
+ .side,.sl{border-inline-end:0;border-bottom:1px solid var(--line);padding:12px 16px;display:block}
+ .side h3{margin:8px 0 6px}
+ .gl,.sll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+ .gl .g{flex:none;width:auto;border:1px solid var(--line);border-radius:99px;min-height:40px;padding:6px 12px}
+ .gl .g .x{opacity:1}
+ .sll .si{flex:none;max-width:240px;border:1px solid var(--line)}
+ .side .hint{display:none}
+ .mgr{display:inline-flex;margin-top:10px}
+ .side:not(.edit) .ng{display:none}
+ .ng{margin:8px 0 4px}
+}
+@media(max-width:600px){
+ header{padding:10px 14px;gap:6px 10px}
+ .logo{font-size:18px}
+ .tabs{order:3;width:100%}.tab{flex:1}
+ .who{width:auto;margin-inline-start:auto;font-size:13px;line-height:1.3}.who .em,.who .lg{display:none}.who .btn{flex:none}
+ main{padding:16px 14px 96px}
+ h1{font-size:26px}
+ .bar input[type=search]{flex:1 1 100%}.bar select{flex:1}.bar [data-new]{display:none}
+ .chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;margin-inline:-14px;padding-inline:14px}.chip{flex:none}
+ .fab{display:flex}
+ .bulk{position:sticky;bottom:8px;z-index:4;box-shadow:0 6px 18px rgb(0 0 0/.18)}.bulk select,.bulk input{flex:1 1 45%}
+ table{font-size:14px}
+ .stack thead{display:none}
+ .stack tbody{display:flex;flex-direction:column;gap:10px}
+ .stack tr{display:grid;position:relative;padding:12px 14px;border:1px solid var(--line);border-radius:12px}
+ .stack tr.sel{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 6%,transparent)}
+ .stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.5em;text-align:start;background:none!important}
+ .stack td::before{content:attr(data-l);float:inline-start;width:7em;margin-inline-start:-7.5em;white-space:normal;color:var(--mute);font-size:13px}
+ .stack td:empty{display:none}
+ .stack td.nm{padding-inline:0 40px;font-size:16px}
+ .stack td.nm::before,.stack td.ck::before,.stack td.empty::before,.stack tr.sec td::before{display:none}
+ .stack td.ck{position:absolute;top:10px;right:10px;padding:0;width:auto}
+ .stack td.empty{padding:30px 0;text-align:center}
+ .stack td.num{text-align:start}
+ .stack tr.sec{border:0;padding:8px 0 0;border-radius:0}
+ .stack tr.sec td{padding:0}
+ .ovl.center{padding:0;align-items:stretch}
+ .panel{padding:16px;width:100%}
+ .center .panel{border-radius:0;border:0;min-height:100%}
+ .panel .acts{position:sticky;bottom:0;background:var(--bg);padding:12px 0 calc(12px + env(safe-area-inset-bottom));margin-top:12px;border-top:1px solid var(--line)}
+ .kpi{flex:1 1 40%}
+}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -176,6 +222,10 @@ const money=n=>n==null||n===''?'':Number(n).toLocaleString('uk-UA',{maximumFract
 const opts=(arr,cur)=>arr.map(([v,t])=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(t)}</option>`).join('');
 const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
 const nowIso=()=>new Date().toISOString();
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const fEta=e=>{const p=String(e).split('-');return p[2]+'.'+p[1]};
+const isLate=r=>!!r.eta&&r.status!=='got'&&r.eta<today();
+const etaHtml=r=>r.eta&&r.status!=='got'?`<small class="${isLate(r)?'late':''}">Очікується ${fEta(r.eta)}${isLate(r)?' · прострочено':''}</small>`:'';
 let tt;
 function toast(m){let el=$('.toast');if(!el){el=document.createElement('div');el.className='toast';document.body.append(el)}el.textContent=m;el.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>el.style.opacity=0,2600)}
 
@@ -229,8 +279,8 @@ function scoped(){
 function render(){
   const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;
   $('#tabs').innerHTML=sb&&!U.err?[['req',isA?'Заявки':'Мої заявки'],['sup',isA?'Постачальники':'Каталог']].map(([k,t])=>`<button class="tab" data-tab="${k}" aria-current="${U.tab===k}">${t}</button>`).join(''):'';
-  $('#who').innerHTML=!sb?'':isA?`<span>Закупівлі: <b>${esc(email)}</b></span><button class="btn sm" data-logout>Вийти</button>`
-    :`${ME.name?`<span>Ви: <b>${esc(ME.name)}</b>${ME.dept?' · '+esc(ME.dept):''}</span><button class="btn sm" data-setme>Змінити</button>`:''}<button class="btn sm" data-login>Вхід для закупівель</button>`;
+  $('#who').innerHTML=!sb?'':isA?`<span class="em">Закупівлі: <b>${esc(email)}</b></span><button class="btn sm" data-logout>Вийти</button>`
+    :`${ME.name?`<span>Ви: <b>${esc(ME.name)}</b>${ME.dept?' · '+esc(ME.dept):''}</span><button class="btn sm" data-setme>Змінити</button>`:''}<button class="btn sm" data-login>Вхід<span class="lg"> для закупівель</span></button>`;
   $('#app').innerHTML=!sb?setupView():U.loading?'<p class="empty">Завантаження…</p>':U.err?errView():U.tab==='req'?(isA||ME.name?reqView():whoView()):supView();
   if(id){const el=document.getElementById(id);if(el&&el!==a&&el.tagName==='INPUT'){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
@@ -246,18 +296,19 @@ function reqView(){
   const a=isA,base=scoped();
   const list=U.status==='all'?base:base.filter(r=>r.status===U.status);
   const cnt=k=>base.filter(r=>r.status===k).length;
-  const side=a?`<aside class="side">
-    <h3>Групи</h3>
+  const side=a?`<aside class="side ${U.mgr?'edit':''}">
+    <h3>Групи</h3><div class="gl">
     <button class="g ${U.group==='all'?'on':''}" data-g="all">Усі заявки <span>${D.requests.length}</span></button>
     <button class="g ${U.group==='none'?'on':''}" data-g="none" data-drop="g:none">Без групи <span>${D.requests.filter(r=>!r.group_id).length}</span></button>
     ${D.groups.map(g=>`<div class="g folder ${U.group===g.id?'on':''}" data-g="${g.id}" data-drop="g:${g.id}" role="button" tabindex="0">${esc(g.name)}<span>${D.requests.filter(r=>r.group_id===g.id).length}</span><button class="x" data-delg="${g.id}" title="Видалити групу" aria-label="Видалити групу">×</button></div>`).join('')}
-    <form class="ng" id="ngf"><input id="ngn" placeholder="Нова група" aria-label="Назва нової групи"><button class="btn sm pri">+</button></form>
-    <h3 style="margin-top:22px">Категорії</h3>
+    </div><form class="ng" id="ngf"><input id="ngn" placeholder="Нова група" aria-label="Назва нової групи"><button class="btn sm pri">+</button></form>
+    <h3 style="margin-top:22px">Категорії</h3><div class="gl">
     <button class="g ${U.cat==='all'?'on':''}" data-c="all">Усі категорії</button>
     <button class="g ${U.cat==='none'?'on':''}" data-c="none" data-drop="c:none">Без категорії <span>${D.requests.filter(r=>!r.category_id).length}</span></button>
     ${D.cats.map(c=>`<div class="g tag ${U.cat===c.id?'on':''}" data-c="${c.id}" data-drop="c:${c.id}" role="button" tabindex="0">${esc(c.name)}<span>${D.requests.filter(r=>r.category_id===c.id).length}</span><button class="x" data-delc="${c.id}" title="Видалити категорію" aria-label="Видалити категорію">×</button></div>`).join('')}
-    <form class="ng" id="ncf"><input id="ncn" placeholder="Нова категорія" aria-label="Назва нової категорії"><button class="btn sm pri">+</button></form>
+    </div><form class="ng" id="ncf"><input id="ncn" placeholder="Нова категорія" aria-label="Назва нової категорії"><button class="btn sm pri">+</button></form>
     <p class="hint">Перетягніть заявку (або кілька вибраних) на групу чи категорію.</p>
+    <button class="btn sm mgr" data-mgr>${U.mgr?'Готово':'+ Додати групу або категорію'}</button>
   </aside>`:'';
   const gT=U.group==='all'?'':U.group==='none'?'Без групи':grp(U.group)?.name||'';
   const cT=U.cat==='all'?'':U.cat==='none'?'Без категорії':cat(U.cat)?.name||'';
@@ -280,7 +331,7 @@ function reqView(){
   const supFilter=U.supF?`<button class="chip on" data-clrsup>Постачальник: ${esc(sup(U.supF)?.name)} ×</button>`:'';
   return `<div class="wrap ${a?'':'solo'}">${side}<main>
     <h1>${esc(title)}</h1>
-    <p class="sub">${base.length} заявок, у роботі ${open}${a?'':'. Тут видно статус і чим їде ваше замовлення.'}</p>
+    <p class="sub">${base.length} заявок, у роботі ${open}${base.filter(isLate).length?`, <span class="late">прострочено ${base.filter(isLate).length}</span>`:''}${a?'':'. Тут видно статус і чим їде ваше замовлення.'}</p>
     <div class="bar">
       <input type="search" id="q" placeholder="Пошук: назва, автор, рахунок, ТТН…" value="${esc(U.q)}" aria-label="Пошук">
       <select id="by" aria-label="Групувати">${opts([['none','Без групування'],['sup','За постачальником'],['cat','За категорією'],['status','За статусом'],...(a?[['author','За автором']]:[])],U.by)}</select>
@@ -289,6 +340,7 @@ function reqView(){
     <div class="chips">${supFilter}<button class="chip ${U.status==='all'?'on':''}" data-st="all">Усі <b>${base.length}</b></button>${ST.map(s=>`<button class="chip ${U.status===s.k?'on':''}" data-st="${s.k}" style="--c:var(--c-${s.k})"><i></i>${s.t} <b>${cnt(s.k)}</b></button>`).join('')}</div>
     ${a&&U.sel.size?bulk():''}
     <table class="stack"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>
+    <button class="fab" data-new aria-label="Нова заявка">+</button>
   </main></div>`;
 }
 function bulk(){
@@ -296,6 +348,7 @@ function bulk(){
   <select id="bst" aria-label="Статус для вибраних"><option value="">Статус…</option>${opts(ST.map(s=>[s.k,s.t]))}</select>
   <select id="bgr" aria-label="Група для вибраних"><option value="">У групу…</option><option value="__none">Прибрати з групи</option>${opts(D.groups.map(g=>[g.id,g.name]))}</select>
   <select id="bct" aria-label="Категорія для вибраних"><option value="">Категорія…</option><option value="__none">Прибрати категорію</option>${opts(D.cats.map(c=>[c.id,c.name]))}</select>
+  <label style="display:flex;align-items:center;gap:6px">Очікується <input type="date" id="bet" style="padding:6px 8px;border-radius:6px;border:0;background:var(--bg);color:var(--ink);min-height:36px"></label>
   <select id="bsp" aria-label="Постачальник для вибраних"><option value="">Постачальник…</option>${opts(D.suppliers.map(s=>[s.id,s.name]))}</select>
   <button class="btn sm" data-clrsel>Зняти вибір</button></div>`;
 }
@@ -304,7 +357,7 @@ function row(r){
   const pos=`<td class="nm"><b>${esc(r.title)}</b>${r.urgent?'<span class="urg">терміново</span>':''}<a class="lnk" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(host(r.url)||r.url)} ↗</a>${r.note?`<small>${esc(r.note)}</small>`:''}</td>`;
   const qty=`<td class="num">${esc(r.qty)} ${esc(r.unit)}</td>`;
   const ship=r.car?`${esc(r.car)}${r.ttn?`, ТТН ${esc(r.ttn)}`:''}`:'';
-  if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td>${esc(s?.name||'')}${ct?`<small>${esc(ct.name)}</small>`:''}</td><td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}</td><td class="num">${dt(r.created_at)}</td></tr>`;
+  if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td>${esc(s?.name||'')}${ct?`<small>${esc(ct.name)}</small>`:''}</td><td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}${etaHtml(r)}</td><td class="num">${dt(r.created_at)}</td></tr>`;
   const docs=[r.inv&&`Рах. ${esc(r.inv)}`,r.amount&&money(r.amount),r.vn&&`ВН ${esc(r.vn)}`].filter(Boolean).join(' · ');
   return `<tr data-id="${r.id}" draggable="true" class="${sel?'sel':''}">
     <td class="ck"><input type="checkbox" data-ck="${r.id}" ${sel?'checked':''} aria-label="Вибрати"></td>${pos}${qty}
@@ -312,7 +365,7 @@ function row(r){
     <td>${g?`<span class="gp">${esc(g.name)}</span>`:''}${ct?` <span class="cp">${esc(ct.name)}</span>`:''}</td>
     <td>${esc(s?.name||'')}</td>
     <td><select class="st s-${r.status}" data-rst="${r.id}" aria-label="Статус">${opts(ST.map(x=>[x.k,x.t]),r.status)}</select></td>
-    <td>${docs?`<small style="color:var(--ink)">${docs}</small>`:''}${ship?`<small>${ship}</small>`:''}</td>
+    <td>${docs?`<small style="color:var(--ink)">${docs}</small>`:''}${ship?`<small>${ship}</small>`:''}${etaHtml(r)}</td>
     <td class="num">${dt(r.created_at)}</td></tr>`;
 }
 
@@ -323,9 +376,9 @@ function supView(){
   if(U.sq){const s=U.sq.toLowerCase();list=list.filter(x=>(x.name+' '+(x.site||'')+' '+D.positions.filter(p=>p.sup_id===x.id).map(p=>p.title).join(' ')).toLowerCase().includes(s))}
   if(!U.sup||!sup(U.sup))U.sup=list[0]?.id||null;
   const s=sup(U.sup);
-  const left=`<aside class="sl"><input type="search" id="sq" placeholder="Пошук постачальника або товару" value="${esc(U.sq)}" aria-label="Пошук постачальника">
+  const left=`<aside class="sl"><input type="search" id="sq" placeholder="Пошук постачальника або товару" value="${esc(U.sq)}" aria-label="Пошук постачальника"><div class="sll">
     ${list.map(x=>{const n=a?openOf(x.id).length:0;return `<button class="si ${x.id===U.sup?'on':''}" data-sup="${x.id}"><b>${esc(x.name)}</b>${n?`<em title="Чекають замовлення">${n}</em>`:''}<small>${D.positions.filter(p=>p.sup_id===x.id).length} позицій${x.site?' · '+esc(x.site):''}</small></button>`}).join('')||'<p class="hint">Постачальників ще немає.</p>'}
-    ${a?`<form class="ng" id="nsf"><input id="nsn" placeholder="Новий постачальник" aria-label="Назва постачальника"><button class="btn sm pri">+</button></form>`:''}
+    </div>${a?`<form class="ng" id="nsf"><input id="nsn" placeholder="Новий постачальник" aria-label="Назва постачальника"><button class="btn sm pri">+</button></form>`:''}
   </aside>`;
   if(!s)return `<div class="sups">${left}<main><p class="empty">${a?'Додайте першого постачальника ліворуч.':'Каталог поки порожній.'}</p></main></div>`;
   const pos=D.positions.filter(p=>p.sup_id===s.id);
@@ -402,8 +455,9 @@ function openReq(id){
       <div class="two"><label class="f">Рахунок №<input id="e-inv" value="${esc(r.inv)}"></label><label class="f">Сума, грн<input id="e-am" type="number" step="0.01" min="0" value="${r.amount??''}"></label></div>
       <label class="f">Видаткова накладна (ВН) №<input id="e-vn" value="${esc(r.vn)}"></label>
       <div class="two"><label class="f">Чим їде<select id="e-car"><option value="">—</option>${opts(CAR.map(c=>[c,c]),r.car)}</select></label><label class="f">ТТН / трек<input id="e-ttn" value="${esc(r.ttn)}" inputmode="numeric"></label></div>
+      <label class="f">Очікується (дата)<input id="e-eta" type="date" value="${esc(r.eta||'')}"></label>
       <label class="f">Мої нотатки<textarea id="e-adm">${esc(r.adm)}</textarea></label></fieldset>`
-    :`<fieldset class="box"><legend>Статус</legend><p><span class="st s-${r.status}">${stT(r.status)}</span></p>${r.car?`<p style="margin:0">Їде: <b>${esc(r.car)}</b>${r.ttn?`, ТТН ${esc(r.ttn)}`:''}</p>`:''}<p class="hint" style="margin:10px 0 0">Щоб щось змінити в заявці, напишіть у відділ закупівель.</p></fieldset>`}
+    :`<fieldset class="box"><legend>Статус</legend><p><span class="st s-${r.status}">${stT(r.status)}</span></p>${r.car?`<p style="margin:0">Їде: <b>${esc(r.car)}</b>${r.ttn?`, ТТН ${esc(r.ttn)}`:''}</p>`:''}${r.eta&&r.status!=='got'?`<p style="margin:6px 0 0" class="${isLate(r)?'late':''}">Очікується: <b>${fEta(r.eta)}</b></p>`:''}<p class="hint" style="margin:10px 0 0">Щоб щось змінити в заявці, напишіть у відділ закупівель.</p></fieldset>`}
     ${a?`<ol class="hist"><li>${dtt(r.created_at)}: створено</li>${(r.hist||[]).map(h=>`<li>${dtt(h.t)}: ${stT(h.s)}</li>`).join('')}</ol>`:''}
     <p class="err" id="e-err"></p>
     <div class="acts">${a?'<button class="btn pri">Зберегти</button>':''}<button type="button" class="btn" data-x>${a?'Скасувати':'Закрити'}</button>${a?`<button type="button" class="btn warn" data-del="${r.id}">Видалити</button>`:''}</div>
@@ -441,6 +495,7 @@ document.addEventListener('click',e=>{
   if(el=c('[data-st]')){U.status=el.dataset.st;render();return}
   if(c('[data-clrsup]')){U.supF=null;render();return}
   if(c('[data-clrsel]')){U.sel.clear();render();return}
+  if(c('[data-mgr]')){U.mgr=!U.mgr;render();return}
   if(c('[data-new]')){newReq();return}
   if(el=c('[data-orderall]')){const id=el.dataset.orderall;el.disabled=true;act(async()=>{const n=await setStatus(D.requests.filter(r=>r.sup_id===id&&r.status==='new'),'invoice');toast(`${n} заявок → «Очікую рахунок»`)});return}
   if(el=c('[data-showsup]')){U.tab='req';U.supF=el.dataset.showsup;U.group='all';U.status='all';render();return}
@@ -461,11 +516,12 @@ document.addEventListener('change',e=>{
   if(t.id==='by'){U.by=t.value;render();return}
   if(t.dataset.ck){t.checked?U.sel.add(t.dataset.ck):U.sel.delete(t.dataset.ck);render();return}
   if(t.dataset.rst){const r=D.requests.find(x=>x.id===t.dataset.rst);const k=t.value;act(()=>setStatus([r],k),`«${r.title}» → ${stT(k)}`);return}
-  if(['bst','bgr','bsp','bct'].includes(t.id)&&t.value){
+  if(['bst','bgr','bsp','bct','bet'].includes(t.id)&&t.value){
     const rs=D.requests.filter(r=>U.sel.has(r.id)),ids=rs.map(r=>r.id),v=t.value,kind=t.id;
     U.sel.clear();
     act(async()=>{
       if(kind==='bst')await setStatus(rs,v);
+      if(kind==='bet')await q(sb.from(T.req).update({eta:v}).in('id',ids));
       if(kind==='bct')await q(sb.from(T.req).update({category_id:v==='__none'?null:v}).in('id',ids));
       if(kind==='bgr')await q(sb.from(T.req).update({group_id:v==='__none'?null:v}).in('id',ids));
       if(kind==='bsp'){await q(sb.from(T.req).update({sup_id:v}).in('id',ids));await Promise.all(rs.filter(r=>r.status!=='new').map(r=>upsertPos({...r,sup_id:v})))}
@@ -506,7 +562,7 @@ document.addEventListener('submit',async e=>{
     const r=D.requests.find(x=>x.id===M.id);
     const t=val('e-t'),u=val('e-u'),qn=+val('e-q');
     if(!validate(t,u,qn,'#e-err'))return;
-    const patch={title:t,url:u,qty:qn,unit:val('e-un'),note:val('e-n'),group_id:val('e-g')||null,category_id:val('e-c')||null,sup_id:val('e-sp')||null,inv:val('e-inv'),amount:val('e-am')?+val('e-am'):null,vn:val('e-vn'),car:val('e-car'),ttn:val('e-ttn'),adm:val('e-adm')};
+    const patch={title:t,url:u,qty:qn,unit:val('e-un'),note:val('e-n'),group_id:val('e-g')||null,category_id:val('e-c')||null,sup_id:val('e-sp')||null,inv:val('e-inv'),amount:val('e-am')?+val('e-am'):null,vn:val('e-vn'),car:val('e-car'),ttn:val('e-ttn'),eta:val('e-eta')||null,adm:val('e-adm')};
     const k=val('e-s');if(k!==r.status)Object.assign(patch,statusPatch(r,k));
     closeOv();
     act(async()=>{await q(sb.from(T.req).update(patch).eq('id',r.id));const n={...r,...patch};if(n.status!=='new'&&n.sup_id)await upsertPos(n)},'Збережено')}
