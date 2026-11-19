@@ -43,6 +43,8 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:14px
 .g span{margin-inline-start:auto;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
 .g.on{background:var(--soft);font-weight:700}
 .g.folder::before{content:"";width:14px;height:11px;border-radius:2px;background:var(--pink);flex:none;box-shadow:inset 0 3px 0 color-mix(in srgb,var(--pinkInk) 25%,transparent)}
+.g.tag::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--acc);flex:none;margin-inline:2px}
+.cp{display:inline-block;background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--ink);border-radius:5px;padding:1px 7px;font-size:13px;white-space:nowrap}
 .g.over{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent)}
 .g .x{opacity:0;border:0;background:none;color:var(--mute);padding:0 4px;font-size:16px}
 .g:hover .x,.g:focus-within .x{opacity:1}
@@ -147,15 +149,15 @@ const SUPABASE_URL = 'https://tyrqelewszgzegdcpkew.supabase.co';       // нап
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5cnFlbGV3c3pnemVnZGNwa2V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwMzE1NjgsImV4cCI6MjExMDYwNzU2OH0.64rxeVxn-e-umfBYU95E7SfaIgY8T6cD0n8k17UZ3rM';  // ключ "anon public" (НЕ service_role!)
 /* ================================================================================ */
 
-const T={req:'zk_requests',pub:'zk_requests_public',sup:'zk_suppliers',pos:'zk_positions',grp:'zk_groups'};
+const T={req:'zk_requests',pub:'zk_requests_public',sup:'zk_suppliers',pos:'zk_positions',grp:'zk_groups',cat:'zk_categories'};
 const ST=[{k:'new',t:'Не замовлено'},{k:'invoice',t:'Очікую рахунок'},{k:'pay',t:'Подав на оплату'},{k:'paid',t:'Оплачено'},{k:'got',t:'Отримано'}];
 const CAR=['Нова пошта','Укрпошта','Meest','Делівері','САТ',"Кур'єр постачальника",'Самовивіз','Інше'];
 const UNITS=['шт','уп','компл','пачка','котушка','кг','м','л'];
 const DEPTS=['Керівник локації','ІТО','Склад','Лабораторія','Закупівлі','Бухгалтерія'];
 
 let sb=null,isA=false,email='';
-let D={requests:[],suppliers:[],positions:[],groups:[]};
-const U={tab:'req',group:'all',status:'all',q:'',by:'none',sel:new Set(),sup:null,supF:null,sq:'',loading:true,err:''};
+let D={requests:[],suppliers:[],positions:[],groups:[],cats:[]};
+const U={tab:'req',group:'all',cat:'all',status:'all',q:'',by:'none',sel:new Set(),sup:null,supF:null,sq:'',loading:true,err:''};
 let ME={name:'',dept:''};
 try{ME={...ME,...JSON.parse(localStorage.getItem('zk-me')||'{}')}}catch(e){}
 const saveMe=()=>{try{localStorage.setItem('zk-me',JSON.stringify(ME))}catch(e){}};
@@ -165,6 +167,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const stT=k=>ST.find(s=>s.k===k)?.t||k;
 const sup=id=>D.suppliers.find(s=>s.id===id);
 const grp=id=>D.groups.find(g=>g.id===id);
+const cat=id=>D.cats.find(c=>c.id===id);
 const host=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return''}};
 const guessSup=url=>{const h=host(url);return h?D.suppliers.find(s=>s.site&&h.endsWith(s.site))?.id||null:null};
 const dt=t=>new Date(t).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit'});
@@ -180,12 +183,13 @@ function toast(m){let el=$('.toast');if(!el){el=document.createElement('div');el
 async function q(p){const r=await p;if(r.error)throw r.error;return r.data}
 async function loadAll(){
   try{
-    const [req,sups,pos,grs]=await Promise.all([
+    const [req,sups,pos,grs,cats]=await Promise.all([
       q(sb.from(isA?T.req:T.pub).select('*').order('created_at',{ascending:false})),
       q(sb.from(T.sup).select(isA?'*':'id,name,site').order('name')),
       q(sb.from(T.pos).select('*').order('title')),
-      isA?q(sb.from(T.grp).select('*').order('created_at')):Promise.resolve([])]);
-    D={requests:req||[],suppliers:sups||[],positions:pos||[],groups:grs||[]};U.err='';
+      isA?q(sb.from(T.grp).select('*').order('created_at')):Promise.resolve([]),
+      q(sb.from(T.cat).select('*').order('name'))]);
+    D={requests:req||[],suppliers:sups||[],positions:pos||[],groups:grs||[],cats:cats||[]};U.err='';
   }catch(e){U.err=e.message||String(e)}
   U.loading=false;
   for(const id of [...U.sel])if(!D.requests.some(r=>r.id===id))U.sel.delete(id);
@@ -216,9 +220,10 @@ async function checkAdmin(){
 function scoped(){
   let r=D.requests;
   if(!isA)r=r.filter(x=>norm(x.author_name)===norm(ME.name));
-  else{if(U.group==='none')r=r.filter(x=>!x.group_id);else if(U.group!=='all')r=r.filter(x=>x.group_id===U.group)}
+  else{if(U.group==='none')r=r.filter(x=>!x.group_id);else if(U.group!=='all')r=r.filter(x=>x.group_id===U.group);
+    if(U.cat==='none')r=r.filter(x=>!x.category_id);else if(U.cat!=='all')r=r.filter(x=>x.category_id===U.cat)}
   if(U.supF)r=r.filter(x=>x.sup_id===U.supF);
-  if(U.q){const s=U.q.toLowerCase();r=r.filter(x=>[x.title,x.url,x.author_name,x.author_dept,sup(x.sup_id)?.name,x.inv,x.vn,x.ttn,x.note].join(' ').toLowerCase().includes(s))}
+  if(U.q){const s=U.q.toLowerCase();r=r.filter(x=>[x.title,x.url,x.author_name,x.author_dept,sup(x.sup_id)?.name,x.inv,x.vn,x.ttn,x.note,cat(x.category_id)?.name].join(' ').toLowerCase().includes(s))}
   return r;
 }
 function render(){
@@ -244,22 +249,29 @@ function reqView(){
   const side=a?`<aside class="side">
     <h3>Групи</h3>
     <button class="g ${U.group==='all'?'on':''}" data-g="all">Усі заявки <span>${D.requests.length}</span></button>
-    <button class="g ${U.group==='none'?'on':''}" data-g="none" data-drop="none">Без групи <span>${D.requests.filter(r=>!r.group_id).length}</span></button>
-    ${D.groups.map(g=>`<div class="g folder ${U.group===g.id?'on':''}" data-g="${g.id}" data-drop="${g.id}" role="button" tabindex="0">${esc(g.name)}<span>${D.requests.filter(r=>r.group_id===g.id).length}</span><button class="x" data-delg="${g.id}" title="Видалити групу" aria-label="Видалити групу">×</button></div>`).join('')}
+    <button class="g ${U.group==='none'?'on':''}" data-g="none" data-drop="g:none">Без групи <span>${D.requests.filter(r=>!r.group_id).length}</span></button>
+    ${D.groups.map(g=>`<div class="g folder ${U.group===g.id?'on':''}" data-g="${g.id}" data-drop="g:${g.id}" role="button" tabindex="0">${esc(g.name)}<span>${D.requests.filter(r=>r.group_id===g.id).length}</span><button class="x" data-delg="${g.id}" title="Видалити групу" aria-label="Видалити групу">×</button></div>`).join('')}
     <form class="ng" id="ngf"><input id="ngn" placeholder="Нова група" aria-label="Назва нової групи"><button class="btn sm pri">+</button></form>
-    <p class="hint">Перетягніть заявку (або кілька вибраних) на групу.</p>
+    <h3 style="margin-top:22px">Категорії</h3>
+    <button class="g ${U.cat==='all'?'on':''}" data-c="all">Усі категорії</button>
+    <button class="g ${U.cat==='none'?'on':''}" data-c="none" data-drop="c:none">Без категорії <span>${D.requests.filter(r=>!r.category_id).length}</span></button>
+    ${D.cats.map(c=>`<div class="g tag ${U.cat===c.id?'on':''}" data-c="${c.id}" data-drop="c:${c.id}" role="button" tabindex="0">${esc(c.name)}<span>${D.requests.filter(r=>r.category_id===c.id).length}</span><button class="x" data-delc="${c.id}" title="Видалити категорію" aria-label="Видалити категорію">×</button></div>`).join('')}
+    <form class="ng" id="ncf"><input id="ncn" placeholder="Нова категорія" aria-label="Назва нової категорії"><button class="btn sm pri">+</button></form>
+    <p class="hint">Перетягніть заявку (або кілька вибраних) на групу чи категорію.</p>
   </aside>`:'';
-  const title=a?(U.group==='all'?'Усі заявки':U.group==='none'?'Без групи':grp(U.group)?.name||''):'Мої заявки';
+  const gT=U.group==='all'?'':U.group==='none'?'Без групи':grp(U.group)?.name||'';
+  const cT=U.cat==='all'?'':U.cat==='none'?'Без категорії':cat(U.cat)?.name||'';
+  const title=a?([gT,cT].filter(Boolean).join(' · ')||'Усі заявки'):'Мої заявки';
   const open=base.filter(r=>r.status!=='got').length;
-  const head=a?['','Позиція','К-сть','Хто','Група','Постачальник','Статус','Рахунок · доставка','Дата']:['Позиція','К-сть','Постачальник','Статус','Доставка','Дата'];
+  const head=a?['','Позиція','К-сть','Хто','Група · категорія','Постачальник','Статус','Рахунок · доставка','Дата']:['Позиція','К-сть','Постачальник','Статус','Доставка','Дата'];
   const cols=head.length;
   let body='';
   if(!list.length)body=`<tr><td colspan="${cols}" class="empty">${U.q||U.status!=='all'||U.supF?'Нічого не знайдено за цим фільтром.':'Заявок ще немає. Натисніть «Нова заявка».'}</td></tr>`;
   else if(U.by==='none')body=list.map(row).join('');
   else{
-    const key={sup:r=>r.sup_id||'',status:r=>r.status,author:r=>norm(r.author_name)}[U.by];
+    const key={sup:r=>r.sup_id||'',cat:r=>r.category_id||'',status:r=>r.status,author:r=>norm(r.author_name)}[U.by];
     const keys=[...new Set(list.map(key))];
-    const label=k=>U.by==='sup'?(sup(k)?.name||'Постачальника не вказано'):U.by==='status'?stT(k):(list.find(r=>key(r)===k)?.author_name||'');
+    const label=k=>U.by==='sup'?(sup(k)?.name||'Постачальника не вказано'):U.by==='cat'?(cat(k)?.name||'Без категорії'):U.by==='status'?stT(k):(list.find(r=>key(r)===k)?.author_name||'');
     if(U.by==='status')keys.sort((x,y)=>ST.findIndex(s=>s.k===x)-ST.findIndex(s=>s.k===y));
     else keys.sort((x,y)=>list.filter(r=>key(r)===y).length-list.filter(r=>key(r)===x).length);
     body=keys.map(k=>{const rs=list.filter(r=>key(r)===k);const nw=rs.filter(r=>r.status==='new').length;
@@ -271,7 +283,7 @@ function reqView(){
     <p class="sub">${base.length} заявок, у роботі ${open}${a?'':'. Тут видно статус і чим їде ваше замовлення.'}</p>
     <div class="bar">
       <input type="search" id="q" placeholder="Пошук: назва, автор, рахунок, ТТН…" value="${esc(U.q)}" aria-label="Пошук">
-      <select id="by" aria-label="Групувати">${opts([['none','Без групування'],['sup','За постачальником'],['status','За статусом'],...(a?[['author','За автором']]:[])],U.by)}</select>
+      <select id="by" aria-label="Групувати">${opts([['none','Без групування'],['sup','За постачальником'],['cat','За категорією'],['status','За статусом'],...(a?[['author','За автором']]:[])],U.by)}</select>
       <button class="btn pri" data-new>+ Нова заявка</button>
     </div>
     <div class="chips">${supFilter}<button class="chip ${U.status==='all'?'on':''}" data-st="all">Усі <b>${base.length}</b></button>${ST.map(s=>`<button class="chip ${U.status===s.k?'on':''}" data-st="${s.k}" style="--c:var(--c-${s.k})"><i></i>${s.t} <b>${cnt(s.k)}</b></button>`).join('')}</div>
@@ -283,20 +295,21 @@ function bulk(){
   return `<div class="bulk"><b>Вибрано ${U.sel.size}</b>
   <select id="bst" aria-label="Статус для вибраних"><option value="">Статус…</option>${opts(ST.map(s=>[s.k,s.t]))}</select>
   <select id="bgr" aria-label="Група для вибраних"><option value="">У групу…</option><option value="__none">Прибрати з групи</option>${opts(D.groups.map(g=>[g.id,g.name]))}</select>
+  <select id="bct" aria-label="Категорія для вибраних"><option value="">Категорія…</option><option value="__none">Прибрати категорію</option>${opts(D.cats.map(c=>[c.id,c.name]))}</select>
   <select id="bsp" aria-label="Постачальник для вибраних"><option value="">Постачальник…</option>${opts(D.suppliers.map(s=>[s.id,s.name]))}</select>
   <button class="btn sm" data-clrsel>Зняти вибір</button></div>`;
 }
 function row(r){
-  const s=sup(r.sup_id),g=grp(r.group_id),sel=U.sel.has(r.id);
+  const s=sup(r.sup_id),g=grp(r.group_id),ct=cat(r.category_id),sel=U.sel.has(r.id);
   const pos=`<td class="nm"><b>${esc(r.title)}</b>${r.urgent?'<span class="urg">терміново</span>':''}<a class="lnk" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(host(r.url)||r.url)} ↗</a>${r.note?`<small>${esc(r.note)}</small>`:''}</td>`;
   const qty=`<td class="num">${esc(r.qty)} ${esc(r.unit)}</td>`;
   const ship=r.car?`${esc(r.car)}${r.ttn?`, ТТН ${esc(r.ttn)}`:''}`:'';
-  if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td>${esc(s?.name||'')}</td><td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}</td><td class="num">${dt(r.created_at)}</td></tr>`;
+  if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td>${esc(s?.name||'')}${ct?`<small>${esc(ct.name)}</small>`:''}</td><td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}</td><td class="num">${dt(r.created_at)}</td></tr>`;
   const docs=[r.inv&&`Рах. ${esc(r.inv)}`,r.amount&&money(r.amount),r.vn&&`ВН ${esc(r.vn)}`].filter(Boolean).join(' · ');
   return `<tr data-id="${r.id}" draggable="true" class="${sel?'sel':''}">
     <td class="ck"><input type="checkbox" data-ck="${r.id}" ${sel?'checked':''} aria-label="Вибрати"></td>${pos}${qty}
     <td>${esc(r.author_name)}<small>${esc(r.author_dept)}</small></td>
-    <td>${g?`<span class="gp">${esc(g.name)}</span>`:''}</td>
+    <td>${g?`<span class="gp">${esc(g.name)}</span>`:''}${ct?` <span class="cp">${esc(ct.name)}</span>`:''}</td>
     <td>${esc(s?.name||'')}</td>
     <td><select class="st s-${r.status}" data-rst="${r.id}" aria-label="Статус">${opts(ST.map(x=>[x.k,x.t]),r.status)}</select></td>
     <td>${docs?`<small style="color:var(--ink)">${docs}</small>`:''}${ship?`<small>${ship}</small>`:''}</td>
@@ -358,6 +371,7 @@ function newReq(pre){
     <label class="f">Одиниця<select id="f-un">${opts(UNITS.map(x=>[x,x]),pre?.unit||'шт')}</select></label></div>
     <label class="f">Для чого / коментар<textarea id="f-n" placeholder="Напр.: для кабінету фізики, до 1 грудня"></textarea></label>
     <label class="f" style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="f-urg" style="width:20px;height:20px;margin:0;accent-color:var(--acc)"> Терміново</label>
+    ${D.cats.length?`<label class="f">Категорія<select id="f-c"><option value="">Не вибрано</option>${opts(D.cats.map(c=>[c.id,c.name]),!['all','none'].includes(U.cat)?U.cat:'')}</select></label>`:''}
     ${isA?`<label class="f">Група<select id="f-g"><option value="">Без групи</option>${opts(D.groups.map(g=>[g.id,g.name]),!['all','none'].includes(U.group)?U.group:'')}</select></label>`:''}
     <p class="err" id="f-err"></p>
     <div class="acts"><button class="btn pri" id="f-go">Створити заявку</button><button type="button" class="btn" data-x>Скасувати</button></div>
@@ -383,6 +397,7 @@ function openReq(id){
     ${a?`<fieldset class="box"><legend>Обробка (бачите тільки ви)</legend>
       <div class="two"><label class="f">Статус<select id="e-s">${opts(ST.map(s=>[s.k,s.t]),r.status)}</select></label>
       <label class="f">Група<select id="e-g"><option value="">Без групи</option>${opts(D.groups.map(g=>[g.id,g.name]),r.group_id||'')}</select></label></div>
+      <label class="f">Категорія<select id="e-c"><option value="">Без категорії</option>${opts(D.cats.map(c=>[c.id,c.name]),r.category_id||'')}</select></label>
       <label class="f">Постачальник<select id="e-sp"><option value="">Не вказано</option>${opts(D.suppliers.map(s=>[s.id,s.name]),r.sup_id||'')}</select></label>
       <div class="two"><label class="f">Рахунок №<input id="e-inv" value="${esc(r.inv)}"></label><label class="f">Сума, грн<input id="e-am" type="number" step="0.01" min="0" value="${r.amount??''}"></label></div>
       <label class="f">Видаткова накладна (ВН) №<input id="e-vn" value="${esc(r.vn)}"></label>
@@ -420,6 +435,8 @@ document.addEventListener('click',e=>{
   if(c('[data-logout]')){sb.auth.signOut().then(()=>{isA=false;email='';U.sel.clear();U.group='all';loadAll()});return}
   if(c('[data-setme]')){ME={name:'',dept:''};saveMe();U.tab='req';render();return}
   if(el=c('[data-delg]')){e.stopPropagation();const id=el.dataset.delg;if(U.group===id)U.group='all';act(()=>q(sb.from(T.grp).delete().eq('id',id)),'Групу видалено, заявки залишились');return}
+  if(el=c('[data-delc]')){e.stopPropagation();const id=el.dataset.delc;if(U.cat===id)U.cat='all';act(()=>q(sb.from(T.cat).delete().eq('id',id)),'Категорію видалено, заявки залишились');return}
+  if(el=c('[data-c]')){U.cat=el.dataset.c;U.sel.clear();render();return}
   if(el=c('[data-g]')){U.group=el.dataset.g;U.sel.clear();render();return}
   if(el=c('[data-st]')){U.status=el.dataset.st;render();return}
   if(c('[data-clrsup]')){U.supF=null;render();return}
@@ -437,17 +454,19 @@ document.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&M)closeOv();
   if(e.key==='Enter'&&e.target.matches('.g[data-g]')){U.group=e.target.dataset.g;render()}
+  if(e.key==='Enter'&&e.target.matches('.g[data-c]')){U.cat=e.target.dataset.c;render()}
 });
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='by'){U.by=t.value;render();return}
   if(t.dataset.ck){t.checked?U.sel.add(t.dataset.ck):U.sel.delete(t.dataset.ck);render();return}
   if(t.dataset.rst){const r=D.requests.find(x=>x.id===t.dataset.rst);const k=t.value;act(()=>setStatus([r],k),`«${r.title}» → ${stT(k)}`);return}
-  if(['bst','bgr','bsp'].includes(t.id)&&t.value){
+  if(['bst','bgr','bsp','bct'].includes(t.id)&&t.value){
     const rs=D.requests.filter(r=>U.sel.has(r.id)),ids=rs.map(r=>r.id),v=t.value,kind=t.id;
     U.sel.clear();
     act(async()=>{
       if(kind==='bst')await setStatus(rs,v);
+      if(kind==='bct')await q(sb.from(T.req).update({category_id:v==='__none'?null:v}).in('id',ids));
       if(kind==='bgr')await q(sb.from(T.req).update({group_id:v==='__none'?null:v}).in('id',ids));
       if(kind==='bsp'){await q(sb.from(T.req).update({sup_id:v}).in('id',ids));await Promise.all(rs.filter(r=>r.status!=='new').map(r=>upsertPos({...r,sup_id:v})))}
     },`Оновлено заявок: ${rs.length}`);return}
@@ -471,13 +490,14 @@ document.addEventListener('submit',async e=>{
     if(!isA){$('#l-err').textContent='Цей акаунт не має доступу адміністратора.';$('#l-go').disabled=false;return}
     closeOv();U.loading=true;render();loadAll();return}
   if(f.id==='ngf'){const n=val('ngn');if(!n)return;act(async()=>{const g=await q(sb.from(T.grp).insert({name:n}).select().single());U.group=g.id},'Групу створено');return}
+  if(f.id==='ncf'){const n=val('ncn');if(!n)return;act(()=>q(sb.from(T.cat).insert({name:n})),'Категорію створено');return}
   if(f.id==='nsf'){const n=val('nsn');if(!n)return;act(async()=>{const s=await q(sb.from(T.sup).insert({name:n}).select().single());U.sup=s.id;U.sq=''});return}
   if(f.id==='npf'){const t=val('np-t'),u=val('np-u');if(!t||!/^https?:\/\//.test(u)){toast('Вкажіть назву і посилання з https://');return}const row={sup_id:U.sup,title:t,url:u,unit:val('np-un')};if(val('np-p'))row.price=+val('np-p');act(()=>q(sb.from(T.pos).upsert(row,{onConflict:'url'})),'Позицію додано');return}
   if(f.id==='nrf'){
     const who=val('f-who'),t=val('f-t'),u=val('f-u'),qn=+val('f-q');
     if(!validate(t,u,qn,'#f-err',who))return;
     ME={name:who,dept:val('f-dept')};saveMe();
-    const row={title:t,url:u,qty:qn,unit:val('f-un'),author_name:who,author_dept:ME.dept,note:val('f-n'),urgent:$('#f-urg').checked,sup_id:M.sup||guessSup(u)};
+    const row={title:t,url:u,qty:qn,unit:val('f-un'),author_name:who,author_dept:ME.dept,note:val('f-n'),urgent:$('#f-urg').checked,sup_id:M.sup||guessSup(u),category_id:val('f-c')||null};
     if(isA)row.group_id=val('f-g')||null;
     $('#f-go').disabled=true;
     try{await q(sb.from(T.req).insert(row))}catch(err){$('#f-err').textContent='Не вдалося зберегти: '+(err.message||err);$('#f-go').disabled=false;return}
@@ -486,7 +506,7 @@ document.addEventListener('submit',async e=>{
     const r=D.requests.find(x=>x.id===M.id);
     const t=val('e-t'),u=val('e-u'),qn=+val('e-q');
     if(!validate(t,u,qn,'#e-err'))return;
-    const patch={title:t,url:u,qty:qn,unit:val('e-un'),note:val('e-n'),group_id:val('e-g')||null,sup_id:val('e-sp')||null,inv:val('e-inv'),amount:val('e-am')?+val('e-am'):null,vn:val('e-vn'),car:val('e-car'),ttn:val('e-ttn'),adm:val('e-adm')};
+    const patch={title:t,url:u,qty:qn,unit:val('e-un'),note:val('e-n'),group_id:val('e-g')||null,category_id:val('e-c')||null,sup_id:val('e-sp')||null,inv:val('e-inv'),amount:val('e-am')?+val('e-am'):null,vn:val('e-vn'),car:val('e-car'),ttn:val('e-ttn'),adm:val('e-adm')};
     const k=val('e-s');if(k!==r.status)Object.assign(patch,statusPatch(r,k));
     closeOv();
     act(async()=>{await q(sb.from(T.req).update(patch).eq('id',r.id));const n={...r,...patch};if(n.status!=='new'&&n.sup_id)await upsertPos(n)},'Збережено')}
@@ -496,9 +516,10 @@ let drag=[];
 document.addEventListener('dragstart',e=>{const tr=e.target.closest&&e.target.closest('tr[data-id]');if(!tr)return;const id=tr.dataset.id;drag=U.sel.has(id)?[...U.sel]:[id];e.dataTransfer.setData('text/plain',drag.join(','));e.dataTransfer.effectAllowed='move';tr.classList.add('dragging')});
 document.addEventListener('dragend',()=>{document.querySelectorAll('.dragging,.over').forEach(x=>x.classList.remove('dragging','over'));setTimeout(()=>drag=[],0)});
 document.addEventListener('dragover',e=>{const d=e.target.closest&&e.target.closest('[data-drop]');if(!d||!drag.length)return;e.preventDefault();document.querySelectorAll('.over').forEach(x=>x!==d&&x.classList.remove('over'));d.classList.add('over')});
-document.addEventListener('drop',e=>{const d=e.target.closest&&e.target.closest('[data-drop]');if(!d||!drag.length)return;e.preventDefault();const g=d.dataset.drop==='none'?null:d.dataset.drop;const ids=drag.slice(),n=ids.length;drag=[];U.sel.clear();
-  D.requests.forEach(r=>{if(ids.includes(r.id))r.group_id=g});render();
-  act(()=>q(sb.from(T.req).update({group_id:g}).in('id',ids)),g?`Переміщено в «${grp(g)?.name}»: ${n}`:`Прибрано з групи: ${n}`)});
+document.addEventListener('drop',e=>{const d=e.target.closest&&e.target.closest('[data-drop]');if(!d||!drag.length)return;e.preventDefault();const [kind,raw]=d.dataset.drop.split(':');const v=raw==='none'?null:raw,f=kind==='c'?'category_id':'group_id';const ids=drag.slice(),n=ids.length;drag=[];U.sel.clear();
+  D.requests.forEach(r=>{if(ids.includes(r.id))r[f]=v});render();
+  const nm=kind==='c'?cat(v)?.name:grp(v)?.name;
+  act(()=>q(sb.from(T.req).update({[f]:v}).in('id',ids)),v?`Переміщено в «${nm}»: ${n}`:(kind==='c'?`Прибрано категорію: ${n}`:`Прибрано з групи: ${n}`))});
 
 /* ---------- старт ---------- */
 (async()=>{
