@@ -231,7 +231,7 @@ const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4)
 const fEta=e=>{const p=String(e).split('-');return p[2]+'.'+p[1]};
 const isLate=r=>!!r.eta&&r.status!=='got'&&r.eta<today();
 const fq=n=>Number(n).toLocaleString('uk-UA',{maximumFractionDigits:2});
-const itemKey=r=>{let k;try{const x=new URL(r.url);[...x.searchParams.keys()].forEach(p=>{if(/^(utm_|fbclid|gclid)/.test(p))x.searchParams.delete(p)});k=(x.host.replace(/^www\./,'')+x.pathname.replace(/\/$/,'')+x.search).toLowerCase()}catch(e){k=norm(r.title)}return k+'|'+norm(r.unit)};
+const itemKey=r=>{if(!r.url&&r.pos_id)return 'p:'+r.pos_id+'|'+norm(r.unit);let k;try{const x=new URL(r.url);[...x.searchParams.keys()].forEach(p=>{if(/^(utm_|fbclid|gclid)/.test(p))x.searchParams.delete(p)});k=(x.host.replace(/^www\./,'')+x.pathname.replace(/\/$/,'')+x.search).toLowerCase()}catch(e){k=norm(r.title)}return k+'|'+norm(r.unit)};
 const aggregate=list=>{const m=new Map();for(const r of list){const k=itemKey(r);if(!m.has(k))m.set(k,[]);m.get(k).push(r)}return [...m.values()].map(rs=>({rs,tot:rs.reduce((t,r)=>t+(+r.qty||0),0)}))};
 const plural=n=>n%10===1&&n%100!==11?'заявка':[2,3,4].includes(n%10)&&![12,13,14].includes(n%100)?'заявки':'заявок';
 const etaHtml=r=>r.eta&&r.status!=='got'?`<small class="${isLate(r)?'late':''}">Очікується ${fEta(r.eta)}${isLate(r)?' · прострочено':''}</small>`:'';
@@ -257,6 +257,12 @@ async function loadAll(){
 async function act(fn,msg){try{await fn();if(msg)toast(msg)}catch(e){toast('Помилка: '+(e.message||e))}await loadAll()}
 const statusPatch=(r,k)=>({status:k,hist:[...(r.hist||[]),{t:nowIso(),s:k,by:email}]});
 function upsertPos(r){
+  if(!r.url){
+    const p=r.pos_id?D.positions.find(x=>x.id===r.pos_id):D.positions.find(x=>!x.url&&norm(x.title)===norm(r.title));
+    const u={sup_id:r.sup_id};if(r.amount&&r.qty)u.price=Math.round(r.amount/r.qty*100)/100;
+    if(p)return q(sb.from(T.pos).update(u).eq('id',p.id));
+    return q(sb.from(T.pos).insert({...u,title:r.title,url:null,unit:r.unit}));
+  }
   const row={sup_id:r.sup_id,title:r.title,url:r.url,unit:r.unit};
   if(r.amount&&r.qty)row.price=Math.round(r.amount/r.qty*100)/100;
   return q(sb.from(T.pos).upsert(row,{onConflict:'url'}));
@@ -267,19 +273,19 @@ async function ensureSup(url){
   const n=await q(sb.from(T.sup).insert({name:h,site:h}).select().single());
   D.suppliers.push(n);return n.id;
 }
-async function syncPos(url,excl){
-  const p=D.positions.find(x=>x.url===url);if(!p)return;
-  const rs=D.requests.filter(r=>r.url===url&&r.id!==excl&&r.status!=='new');
+async function syncPos(src,excl){
+  const p=src.url?D.positions.find(x=>x.url===src.url):src.pos_id?D.positions.find(x=>x.id===src.pos_id):D.positions.find(x=>!x.url&&norm(x.title)===norm(src.title));if(!p)return;
+  const rs=D.requests.filter(r=>((p.url&&r.url===p.url)||r.pos_id===p.id||(!p.url&&!r.url&&!r.pos_id&&norm(r.title)===norm(p.title)))&&r.id!==excl&&r.status!=='new');
   if(!rs.length){if(!p.manual)await q(sb.from(T.pos).delete().eq('id',p.id));return}
   const w=rs.filter(r=>r.amount&&r.qty).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
   await q(sb.from(T.pos).update({price:w?Math.round(w.amount/w.qty*100)/100:null}).eq('id',p.id));
 }
 async function setStatus(rs,k){
   rs=rs.filter(r=>r.status!==k);
-  if(k!=='new')for(const r of rs)if(!r.sup_id)r.sup_id=await ensureSup(r.url);
+  if(k!=='new')for(const r of rs)if(!r.sup_id)r.sup_id=D.positions.find(p=>p.id===r.pos_id)?.sup_id||await ensureSup(r.url);
   await Promise.all(rs.map(r=>q(sb.from(T.req).update({...statusPatch(r,k),sup_id:r.sup_id||null}).eq('id',r.id))));
-  if(k!=='new')await Promise.all(rs.filter(r=>r.sup_id).map(upsertPos));
-  else for(const r of rs)await syncPos(r.url,r.id);
+  if(k!=='new')for(const r of rs)if(r.sup_id||!r.url)await upsertPos(r);
+  else for(const r of rs)await syncPos(r,r.id);
   return rs.length;
 }
 async function checkAdmin(){
@@ -383,7 +389,7 @@ function bulk(){
 }
 function row(r){
   const s=sup(r.sup_id),g=grp(r.group_id),ct=cat(r.category_id),sel=U.sel.has(r.id);
-  const pos=`<td class="nm"><b>${esc(r.title)}</b>${r.urgent?'<span class="urg">терміново</span>':''}<a class="lnk" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(host(r.url)||r.url)} ↗</a>${r.note?`<small>${esc(r.note)}</small>`:''}</td>`;
+  const pos=`<td class="nm"><b>${esc(r.title)}</b>${r.urgent?'<span class="urg">терміново</span>':''}${r.url?`<a class="lnk" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(host(r.url)||r.url)} ↗</a>`:r.pos_id?'<small>з каталогу</small>':''}${r.note?`<small>${esc(r.note)}</small>`:''}</td>`;
   const qty=`<td class="num">${esc(r.qty)} ${esc(r.unit)}</td>`;
   const ship=r.car?`${esc(r.car)}${r.ttn?`, ТТН ${esc(r.ttn)}`:''}`:'';
   if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}${etaHtml(r)}</td><td class="num">${dt(r.created_at)}</td></tr>`;
@@ -403,22 +409,23 @@ function supView(){
   const openOf=id=>D.requests.filter(r=>r.sup_id===id&&r.status==='new');
   let list=D.suppliers.slice().sort((x,y)=>(a?openOf(y.id).length-openOf(x.id).length:0)||x.name.localeCompare(y.name,'uk'));
   if(U.sq){const s=U.sq.toLowerCase();list=list.filter(x=>(x.name+' '+(x.site||'')+' '+D.positions.filter(p=>p.sup_id===x.id).map(p=>p.title).join(' ')).toLowerCase().includes(s))}
-  if(!U.sup||!sup(U.sup))U.sup=list[0]?.id||null;
-  const s=sup(U.sup);
+  const noSup=a?D.positions.filter(p=>!p.sup_id).length:0;
+  if(!U.sup||(!sup(U.sup)&&!(U.sup==='__none'&&noSup)))U.sup=list[0]?.id||(noSup?'__none':null);
+  const s=U.sup==='__none'?{id:'__none',name:'Позиції без постачальника',site:''}:sup(U.sup);
   const left=`<aside class="sl"><input type="search" id="sq" placeholder="Пошук постачальника або товару" value="${esc(U.sq)}" aria-label="Пошук постачальника"><div class="sll">
     ${list.map(x=>{const n=a?openOf(x.id).length:0;return `<button class="si ${x.id===U.sup?'on':''}" data-sup="${x.id}"><b>${esc(x.name)}</b>${n?`<em title="Чекають замовлення">${n}</em>`:''}<small>${D.positions.filter(p=>p.sup_id===x.id).length} позицій${x.site?' · '+esc(x.site):''}</small></button>`}).join('')||'<p class="hint">Постачальників ще немає.</p>'}
-    </div>${a?`<form class="ng" id="nsf"><input id="nsn" placeholder="Новий постачальник" aria-label="Назва постачальника"><button class="btn sm pri">+</button></form>`:''}
+    ${noSup?`<button class="si ${U.sup==='__none'?'on':''}" data-sup="__none"><b>Без постачальника</b><small>${noSup} позицій</small></button>`:''}</div>${a?`<form class="ng" id="nsf"><input id="nsn" placeholder="Новий постачальник" aria-label="Назва постачальника"><button class="btn sm pri">+</button></form>`:''}
   </aside>`;
   if(!s)return `<div class="sups">${left}<main><p class="empty">${a?'Додайте першого постачальника ліворуч.':'Каталог поки порожній.'}</p></main></div>`;
-  const pos=D.positions.filter(p=>p.sup_id===s.id);
-  const times=p=>D.requests.filter(r=>r.url===p.url&&r.status!=='new').length;
+  const pos=D.positions.filter(p=>s.id==='__none'?!p.sup_id:p.sup_id===s.id);
+  const times=p=>D.requests.filter(r=>((p.url&&r.url===p.url)||r.pos_id===p.id||(!p.url&&!r.url&&!r.pos_id&&norm(r.title)===norm(p.title)))&&r.status!=='new').length;
   const wait=openOf(s.id);
   const rs=D.requests.filter(r=>r.sup_id===s.id);
   const spent=rs.filter(r=>['paid','got'].includes(r.status)).reduce((t,r)=>t+(+r.amount||0),0);
   return `<div class="sups">${left}<main>
     <h1>${esc(s.name)}</h1>
     <p class="sub">${s.site?`<a class="lnk" style="display:inline" href="https://${esc(s.site)}" target="_blank" rel="noopener">${esc(s.site)} ↗</a>`:''}</p>
-    ${a?`<div class="kpis"><div class="kpi"><b>${wait.length}</b>чекають замовлення</div><div class="kpi"><b>${rs.filter(r=>['invoice','pay','paid'].includes(r.status)).length}</b>у процесі</div><div class="kpi"><b>${rs.filter(r=>r.status==='got').length}</b>отримано</div><div class="kpi"><b>${money(spent)||'0 грн'}</b>оплачено всього</div></div>
+    ${a&&s.id!=='__none'?`<div class="kpis"><div class="kpi"><b>${wait.length}</b>чекають замовлення</div><div class="kpi"><b>${rs.filter(r=>['invoice','pay','paid'].includes(r.status)).length}</b>у процесі</div><div class="kpi"><b>${rs.filter(r=>r.status==='got').length}</b>отримано</div><div class="kpi"><b>${money(spent)||'0 грн'}</b>оплачено всього</div></div>
     ${wait.length?`<div class="wait"><h3>Чекають замовлення: ${wait.length}</h3><ul>${aggregate(wait).map(g=>`<li><b>${esc(g.rs[0].title)}</b> — ${fq(g.tot)} ${esc(g.rs[0].unit)} <small style="color:var(--mute)">(${g.rs.map(r=>`${esc(r.author_name)}: ${fq(r.qty)}`).join(', ')})</small></li>`).join('')}</ul>
       <div class="acts" style="margin:0"><button class="btn pri" data-orderall="${s.id}">Замовити все → «Очікую рахунок»</button><button class="btn" data-showsup="${s.id}">Відкрити в заявках</button></div></div>`:''}
     <fieldset class="box"><legend>Дані постачальника</legend><div class="meta">
@@ -428,8 +435,8 @@ function supView(){
       <label class="f">ЄДРПОУ<input data-sf="edrpou" value="${esc(s.edrpou)}" inputmode="numeric"></label></div>
       <label class="f">Нотатки<textarea data-sf="note">${esc(s.note)}</textarea></label></fieldset>`:''}
     <h2 style="margin:22px 0 8px;font-size:20px">Позиції, які замовляли (${pos.length})</h2>
-    <table class="stack"><thead><tr><th>Позиція</th><th>Од.</th><th class="num">Остання ціна</th>${a?'<th class="num">Замовляли</th>':''}<th></th></tr></thead><tbody>
-    ${pos.map(p=>`<tr><td class="nm"><b>${esc(p.title)}</b><a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(host(p.url))} ↗</a></td><td>${esc(p.unit)}</td><td class="num">${money(p.price)||'—'}</td>${a?`<td class="num">${times(p)} раз</td>`:''}<td style="white-space:nowrap"><button class="btn sm" data-reqpos="${p.id}">Замовити</button> <button class="btn sm warn" data-delpos="${p.id}" aria-label="Видалити позицію">Видалити</button></td></tr>`).join('')||`<tr><td colspan="5" class="empty">Позиції з'являться тут автоматично, щойно заявку з цим постачальником візьмуть у роботу.</td></tr>`}
+    <table class="stack"><thead><tr><th>Позиція</th><th>Од.</th><th class="num">Остання ціна</th>${a?'<th class="num">Замовляли</th><th>Постачальник</th>':''}<th></th></tr></thead><tbody>
+    ${pos.map(p=>`<tr><td class="nm"><b>${esc(p.title)}</b>${p.url?`<a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(host(p.url))} ↗</a>`:''}</td><td>${esc(p.unit)}</td><td class="num">${money(p.price)||'—'}</td>${a?`<td class="num">${times(p)} раз</td><td><select data-psup="${p.id}" aria-label="Постачальник позиції" style="max-width:180px;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--bg)"><option value="">—</option>${opts(D.suppliers.map(x=>[x.id,x.name]),p.sup_id||'')}</select></td>`:''}<td style="white-space:nowrap"><button class="btn sm" data-reqpos="${p.id}">Замовити</button> <button class="btn sm warn" data-delpos="${p.id}" aria-label="Видалити позицію">Видалити</button></td></tr>`).join('')||`<tr><td colspan="6" class="empty">Позиції з'являться тут автоматично, щойно заявку з цим постачальником візьмуть у роботу.</td></tr>`}
     </tbody></table>
     ${a?`<form id="npf" class="box"><legend>Додати позицію вручну</legend><div class="two"><label class="f">Назва<input id="np-t"></label><label class="f">Посилання<input id="np-u" type="url" placeholder="https://"></label></div><div class="two"><label class="f">Од.<select id="np-un">${opts(UNITS.map(x=>[x,x]),'шт')}</select></label><label class="f">Ціна, грн<input id="np-p" type="number" step="0.01" min="0"></label></div><div class="acts"><button class="btn">Додати</button></div></form>`:''}
   </main></div>`;
@@ -437,13 +444,13 @@ function supView(){
 
 function catView(){
   let list=D.positions.slice();
-  if(U.sq){const t=U.sq.toLowerCase();list=list.filter(p=>(p.title+' '+p.url).toLowerCase().includes(t))}
+  if(U.sq){const t=U.sq.toLowerCase();list=list.filter(p=>(p.title+' '+(p.url||'')).toLowerCase().includes(t))}
   return `<main>
     <h1>Каталог</h1>
     <p class="sub">Те, що вже замовляли. Натисніть «Замовити», і назва з посиланням підставляться в заявку самі.</p>
     <div class="bar"><input type="search" id="sq" placeholder="Пошук товару" value="${esc(U.sq)}" aria-label="Пошук товару"></div>
     <table class="stack"><thead><tr><th>Позиція</th><th>Од.</th><th></th></tr></thead><tbody>
-    ${list.map(p=>`<tr><td class="nm"><b>${esc(p.title)}</b><a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(host(p.url))} ↗</a></td><td>${esc(p.unit)}</td><td><button class="btn sm pri" data-reqpos="${p.id}">Замовити</button></td></tr>`).join('')||`<tr><td colspan="3" class="empty">${U.sq?'Нічого не знайдено.':'Каталог поки порожній.'}</td></tr>`}
+    ${list.map(p=>`<tr><td class="nm"><b>${esc(p.title)}</b>${p.url?`<a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(host(p.url))} ↗</a>`:''}</td><td>${esc(p.unit)}</td><td><button class="btn sm pri" data-reqpos="${p.id}">Замовити</button></td></tr>`).join('')||`<tr><td colspan="3" class="empty">${U.sq?'Нічого не знайдено.':'Каталог поки порожній.'}</td></tr>`}
     </tbody></table>
     <button class="fab" data-new aria-label="Нова заявка">+</button>
   </main>`;
@@ -453,12 +460,12 @@ function catView(){
 let M=null;
 function closeOv(){$('#ov').innerHTML='';M=null}
 function itemHtml(pre){
-  return `<div class="item"${pre?.sup?` data-sup="${esc(pre.sup)}"`:''}>
+  return `<div class="item"${pre?.sup?` data-sup="${esc(pre.sup)}"`:''}${pre?.pos?` data-pos="${esc(pre.pos)}"`:''}>
     <div class="ihead"><b class="inum"></b><button type="button" class="btn sm" data-rmitem>Прибрати</button></div>
     <label class="f">Вибрати з каталогу<input class="cq" placeholder="Почніть вводити: папір, печиво, пластик…" autocomplete="off"></label>
     <div class="cres"></div>
     <label class="f">Назва *<input class="it-t" value="${esc(pre?.title||'')}"></label>
-    <label class="f">Посилання *<input class="it-u" type="url" placeholder="https://…" value="${esc(pre?.url||'')}"></label>
+    <label class="f">Посилання<input class="it-u" type="url" placeholder="https://…" value="${esc(pre?.url||'')}"></label>
     <div class="picked">${isA&&pre?.sup?'Постачальник: '+esc(sup(pre.sup)?.name||''):pre?'Вибрано з каталогу':''}</div>
     <div class="two"><label class="f">Кількість *<input class="it-q" type="number" min="0.01" step="any" inputmode="decimal"></label>
     <label class="f">Одиниця<select class="it-un">${opts(UNITS.map(x=>[x,x]),pre?.unit||'шт')}</select></label></div>
@@ -485,7 +492,7 @@ function newReq(pre){
 }
 function catalogSearch(inp){
   const s=inp.value.trim().toLowerCase(),box=inp.closest('.item').querySelector('.cres');
-  const res=s?D.positions.filter(p=>(p.title+' '+p.url+' '+(sup(p.sup_id)?.name||'')).toLowerCase().includes(s)).slice(0,8):[];
+  const res=s?D.positions.filter(p=>(p.title+' '+(p.url||'')+' '+(sup(p.sup_id)?.name||'')).toLowerCase().includes(s)).slice(0,8):[];
   box.innerHTML=res.map(p=>`<button type="button" data-pick="${p.id}"><b>${esc(p.title)}</b><br><small>${isA?`${esc(sup(p.sup_id)?.name||'')} · ${money(p.price)||'ціна невідома'} за `:'од.: '}${esc(p.unit)}</small></button>`).join('')||(s?'<small style="color:var(--mute)">У каталозі немає. Заповніть поля нижче вручну.</small>':'');
 }
 function openReq(id){
@@ -495,8 +502,8 @@ function openReq(id){
   $('#ov').innerHTML=`<div class="ovl" data-close><form class="panel" id="erf">
     <h2>${esc(r.title)}</h2><p class="sub" style="margin:0">Створив(ла): ${esc(r.author_name)}${r.author_dept?' · '+esc(r.author_dept):''} · ${dtt(r.created_at)}</p>
     <label class="f">Назва *<input id="e-t" value="${esc(r.title)}" ${dis}></label>
-    <label class="f">Посилання *<input id="e-u" type="url" value="${esc(r.url)}" ${dis}></label>
-    <a class="lnk" href="${esc(r.url)}" target="_blank" rel="noopener">Відкрити посилання ↗</a>
+    <label class="f">Посилання<input id="e-u" type="url" value="${esc(r.url)}" ${dis}></label>
+    ${r.url?`<a class="lnk" href="${esc(r.url)}" target="_blank" rel="noopener">Відкрити посилання ↗</a>`:r.pos_id?'<small class="hint">Позиція з каталогу, посилання не обов\'язкове</small>':''}
     <div class="two"><label class="f">Кількість *<input id="e-q" type="number" min="0.01" step="any" value="${esc(r.qty)}" ${dis}></label><label class="f">Одиниця<select id="e-un" ${dis}>${opts(UNITS.map(x=>[x,x]),r.unit)}</select></label></div>
     <label class="f">Коментар автора<textarea id="e-n" ${dis}>${esc(r.note)}</textarea></label>
     ${a?`<fieldset class="box"><legend>Обробка (бачите тільки ви)</legend>
@@ -504,7 +511,7 @@ function openReq(id){
       <label class="f">Група<select id="e-g"><option value="">Без групи</option>${opts(D.groups.map(g=>[g.id,g.name]),r.group_id||'')}</select></label></div>
       <label class="f">Категорія<select id="e-c"><option value="">Без категорії</option>${opts(D.cats.map(c=>[c.id,c.name]),r.category_id||'')}</select></label>
       <label class="f">Постачальник<select id="e-sp"><option value="">Не вказано</option>${opts(D.suppliers.map(s=>[s.id,s.name]),r.sup_id||'')}</select></label>
-      ${r.sup_id?'':`<p class="hint" style="margin:6px 0 0">Якщо не вибрати, постачальник створиться сам за сайтом посилання (${esc(host(r.url))}), щойно заявка піде в роботу.</p>`}
+      ${r.sup_id||!r.url?'':`<p class="hint" style="margin:6px 0 0">Якщо не вибрати, постачальник створиться сам за сайтом посилання (${esc(host(r.url))}), щойно заявка піде в роботу.</p>`}
       <div class="two"><label class="f">Рахунок №<input id="e-inv" value="${esc(r.inv)}"></label><label class="f">Сума, грн<input id="e-am" type="number" step="0.01" min="0" value="${r.amount??''}"></label></div>
       <label class="f">Видаткова накладна (ВН) №<input id="e-vn" value="${esc(r.vn)}"></label>
       <div class="two"><label class="f">Чим їде<select id="e-car"><option value="">—</option>${opts(CAR.map(c=>[c,c]),r.car)}</select></label><label class="f">ТТН / трек<input id="e-ttn" value="${esc(r.ttn)}" inputmode="numeric"></label></div>
@@ -525,8 +532,8 @@ function loginBox(){
   $('#l-e').focus();
 }
 const val=id=>document.getElementById(id)?.value.trim()??'';
-function validate(t,u,qn,errEl,who){
-  const e=who===''?"Вкажіть своє ім'я.":!t?'Вкажіть назву.':!/^https?:\/\/\S+\.\S+/.test(u)?'Вкажіть посилання, що починається з https://':!(qn>0)?'Вкажіть кількість, більшу за 0.':'';
+function validate(t,u,qn,errEl,who,noUrlOk){
+  const e=who===''?"Вкажіть своє ім'я.":!t?'Вкажіть назву.':u&&!/^https?:\/\/\S+\.\S+/.test(u)?'Вкажіть посилання, що починається з https://':!(qn>0)?'Вкажіть кількість, більшу за 0.':'';
   $(errEl).textContent=e;return !e;
 }
 
@@ -550,15 +557,15 @@ document.addEventListener('click',e=>{
   if(c('[data-clrsel]')){U.sel.clear();render();return}
   if(c('[data-additem]')){$('#items').insertAdjacentHTML('beforeend',itemHtml());renumber();[...document.querySelectorAll('#items .cq')].pop().focus();return}
   if(el=c('[data-rmitem]')){el.closest('.item').remove();renumber();return}
-  if(el=c('[data-pick]')){const p=D.positions.find(x=>x.id===el.dataset.pick),it=el.closest('.item');it.querySelector('.it-t').value=p.title;it.querySelector('.it-u').value=p.url;it.querySelector('.it-un').value=p.unit;it.dataset.sup=p.sup_id||'';it.querySelector('.picked').textContent=isA?'Постачальник: '+(sup(p.sup_id)?.name||''):'Вибрано з каталогу';it.querySelector('.cres').innerHTML='';it.querySelector('.cq').value='';it.querySelector('.it-q').focus();return}
+  if(el=c('[data-pick]')){const p=D.positions.find(x=>x.id===el.dataset.pick),it=el.closest('.item');it.querySelector('.it-t').value=p.title;it.querySelector('.it-u').value=p.url;it.querySelector('.it-un').value=p.unit;it.dataset.sup=p.sup_id||'';it.dataset.pos=p.id;it.querySelector('.picked').textContent=isA?'Постачальник: '+(sup(p.sup_id)?.name||''):'Вибрано з каталогу';it.querySelector('.cres').innerHTML='';it.querySelector('.cq').value='';it.querySelector('.it-q').focus();return}
   if(c('[data-mgr]')){U.mgr=!U.mgr;render();return}
   if(c('[data-new]')){newReq();return}
   if(el=c('[data-orderall]')){const id=el.dataset.orderall;el.disabled=true;act(async()=>{const n=await setStatus(D.requests.filter(r=>r.sup_id===id&&r.status==='new'),'invoice');toast(`${n} заявок → «Очікую рахунок»`)});return}
   if(el=c('[data-showsup]')){U.tab='req';U.supF=el.dataset.showsup;U.group='all';U.status='all';render();return}
   if(el=c('[data-sup]')){U.sup=el.dataset.sup;render();return}
-  if(el=c('[data-reqpos]')){const p=D.positions.find(x=>x.id===el.dataset.reqpos);newReq({title:p.title,url:p.url,sup:p.sup_id,unit:p.unit});return}
+  if(el=c('[data-reqpos]')){const p=D.positions.find(x=>x.id===el.dataset.reqpos);newReq({title:p.title,url:p.url||'',sup:p.sup_id,unit:p.unit,pos:p.id});return}
   if(el=c('[data-delpos]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно?';return}const id=el.dataset.delpos;act(()=>q(sb.from(T.pos).delete().eq('id',id)),'Позицію видалено з каталогу');return}
-  if(el=c('[data-del]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно видалити?';return}const id=el.dataset.del;U.sel.delete(id);closeOv();const dr=D.requests.find(x=>x.id===id);act(async()=>{await q(sb.from(T.req).delete().eq('id',id));if(dr)await syncPos(dr.url,id)},'Заявку видалено');return}
+  if(el=c('[data-del]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно видалити?';return}const id=el.dataset.del;U.sel.delete(id);closeOv();const dr=D.requests.find(x=>x.id===id);act(async()=>{await q(sb.from(T.req).delete().eq('id',id));if(dr)await syncPos(dr,id)},'Заявку видалено');return}
   if(t.matches('[data-ck],select,input,a')||c('a'))return;
   if(el=c('tr[data-id]')){openReq(el.dataset.id)}
 });
@@ -572,6 +579,7 @@ document.addEventListener('change',e=>{
   if(t.id==='by'){U.by=t.value;render();return}
   if(t.dataset.ck){t.checked?U.sel.add(t.dataset.ck):U.sel.delete(t.dataset.ck);render();return}
   if(t.dataset.aggst&&t.value){const ids=U.agg[+t.dataset.aggst]||[],k=t.value,rs=D.requests.filter(r=>ids.includes(r.id));act(async()=>{const n=await setStatus(rs,k);toast(`${n} заявок → «${stT(k)}»`)});return}
+  if(t.dataset.psup){const id=t.dataset.psup,v=t.value||null;act(()=>q(sb.from(T.pos).update({sup_id:v}).eq('id',id)),'Постачальника позиції змінено');return}
   if(t.dataset.rst){const r=D.requests.find(x=>x.id===t.dataset.rst);const k=t.value;act(()=>setStatus([r],k),`«${r.title}» → ${stT(k)}`);return}
   if(['bst','bgr','bsp','bct','bet'].includes(t.id)&&t.value){
     const rs=D.requests.filter(r=>U.sel.has(r.id)),ids=rs.map(r=>r.id),v=t.value,kind=t.id;
@@ -605,34 +613,34 @@ document.addEventListener('submit',async e=>{
   if(f.id==='ngf'){const n=val('ngn');if(!n)return;act(async()=>{const g=await q(sb.from(T.grp).insert({name:n}).select().single());U.group=g.id},'Групу створено');return}
   if(f.id==='ncf'){const n=val('ncn');if(!n)return;act(()=>q(sb.from(T.cat).insert({name:n})),'Категорію створено');return}
   if(f.id==='nsf'){const n=val('nsn');if(!n)return;act(async()=>{const s=await q(sb.from(T.sup).insert({name:n}).select().single());U.sup=s.id;U.sq=''});return}
-  if(f.id==='npf'){const t=val('np-t'),u=val('np-u');if(!t||!/^https?:\/\//.test(u)){toast('Вкажіть назву і посилання з https://');return}const row={sup_id:U.sup,title:t,url:u,unit:val('np-un'),manual:true};if(val('np-p'))row.price=+val('np-p');act(()=>q(sb.from(T.pos).upsert(row,{onConflict:'url'})),'Позицію додано');return}
+  if(f.id==='npf'){const t=val('np-t'),u=val('np-u');if(!t||!/^https?:\/\//.test(u)){toast('Вкажіть назву і посилання з https://');return}const row={sup_id:U.sup==='__none'?null:U.sup,title:t,url:u,unit:val('np-un'),manual:true};if(val('np-p'))row.price=+val('np-p');act(()=>q(sb.from(T.pos).upsert(row,{onConflict:'url'})),'Позицію додано');return}
   if(f.id==='nrf'){
     const who=val('f-who'),err=$('#f-err');
     if(!who){err.textContent="Вкажіть своє ім'я.";return}
-    const its=[...document.querySelectorAll('#items .item')].map(it=>({t:it.querySelector('.it-t').value.trim(),u:it.querySelector('.it-u').value.trim(),q:+it.querySelector('.it-q').value,un:it.querySelector('.it-un').value,sup:it.dataset.sup||null}));
+    const its=[...document.querySelectorAll('#items .item')].map(it=>({t:it.querySelector('.it-t').value.trim(),u:it.querySelector('.it-u').value.trim(),q:+it.querySelector('.it-q').value,un:it.querySelector('.it-un').value,sup:it.dataset.sup||null,pos:it.dataset.pos||null}));
     for(const [i,x] of its.entries()){
-      const m=!x.t?'вкажіть назву.':!/^https?:\/\/\S+\.\S+/.test(x.u)?'вкажіть посилання, що починається з https://':!(x.q>0)?'вкажіть кількість, більшу за 0.':'';
+      const m=!x.t?'вкажіть назву.':x.u&&!/^https?:\/\/\S+\.\S+/.test(x.u)?'посилання має починатися з https://':!(x.q>0)?'вкажіть кількість, більшу за 0.':'';
       if(m){err.textContent=(its.length>1?`Позиція ${i+1}: `:'')+m.charAt(0).toUpperCase()+m.slice(1);return}
     }
     ME={name:who,dept:val('f-dept')};saveMe();
     const common={author_name:who,author_dept:ME.dept,note:val('f-n'),urgent:$('#f-urg').checked,category_id:val('f-c')||null};
     if(isA)common.group_id=val('f-g')||null;
-    const rows=its.map(x=>({title:x.t,url:x.u,qty:x.q,unit:x.un,sup_id:x.sup||guessSup(x.u),...common}));
+    const rows=its.map(x=>({title:x.t,url:x.u||null,pos_id:x.pos,qty:x.q,unit:x.un,sup_id:x.sup||guessSup(x.u),...common}));
     $('#f-go').disabled=true;
     try{await q(sb.from(T.req).insert(rows))}catch(e2){err.textContent='Не вдалося зберегти: '+(e2.message||e2);$('#f-go').disabled=false;return}
     closeOv();U.tab='req';U.status='all';toast(rows.length>1?`Створено заявок: ${rows.length}`:'Заявку створено');loadAll();return}
   if(f.id==='erf'){
     const r=D.requests.find(x=>x.id===M.id);
     const t=val('e-t'),u=val('e-u'),qn=+val('e-q');
-    if(!validate(t,u,qn,'#e-err'))return;
-    const patch={title:t,url:u,qty:qn,unit:val('e-un'),note:val('e-n'),group_id:val('e-g')||null,category_id:val('e-c')||null,sup_id:val('e-sp')||null,inv:val('e-inv'),amount:val('e-am')?+val('e-am'):null,vn:val('e-vn'),car:val('e-car'),ttn:val('e-ttn'),eta:val('e-eta')||null,adm:val('e-adm')};
+    if(!validate(t,u,qn,'#e-err',undefined,!!r.pos_id))return;
+    const patch={title:t,url:u||null,qty:qn,unit:val('e-un'),note:val('e-n'),group_id:val('e-g')||null,category_id:val('e-c')||null,sup_id:val('e-sp')||null,inv:val('e-inv'),amount:val('e-am')?+val('e-am'):null,vn:val('e-vn'),car:val('e-car'),ttn:val('e-ttn'),eta:val('e-eta')||null,adm:val('e-adm')};
     const k=val('e-s');if(k!==r.status)Object.assign(patch,statusPatch(r,k));
     const btn=f.querySelector('.btn.pri');btn.disabled=true;$('#e-err').textContent='';
     try{
-      if((patch.status||r.status)!=='new'&&!patch.sup_id)patch.sup_id=await ensureSup(patch.url);
+      if((patch.status||r.status)!=='new'&&!patch.sup_id)patch.sup_id=D.positions.find(p=>p.id===r.pos_id)?.sup_id||await ensureSup(patch.url);
       await q(sb.from(T.req).update(patch).eq('id',r.id));
-      const n={...r,...patch};if(n.status!=='new'&&n.sup_id)await upsertPos(n);
-      if(n.status==='new'||n.url!==r.url)await syncPos(r.url,r.id);
+      const n={...r,...patch};if(n.status!=='new'&&(n.sup_id||!n.url))await upsertPos(n);
+      if(n.status==='new'||n.url!==r.url)await syncPos(r,r.id);
     }catch(err){$('#e-err').textContent='Не вдалося зберегти: '+(err.message||err);btn.disabled=false;return}
     closeOv();toast('Збережено');loadAll()}
 });
