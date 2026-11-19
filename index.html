@@ -252,9 +252,16 @@ function upsertPos(r){
   if(r.amount&&r.qty)row.price=Math.round(r.amount/r.qty*100)/100;
   return q(sb.from(T.pos).upsert(row,{onConflict:'url'}));
 }
+async function ensureSup(url){
+  const h=host(url);if(!h)return null;
+  const f=D.suppliers.find(x=>x.site&&h.endsWith(x.site));if(f)return f.id;
+  const n=await q(sb.from(T.sup).insert({name:h,site:h}).select().single());
+  D.suppliers.push(n);return n.id;
+}
 async function setStatus(rs,k){
   rs=rs.filter(r=>r.status!==k);
-  await Promise.all(rs.map(r=>q(sb.from(T.req).update(statusPatch(r,k)).eq('id',r.id))));
+  if(k!=='new')for(const r of rs)if(!r.sup_id)r.sup_id=await ensureSup(r.url);
+  await Promise.all(rs.map(r=>q(sb.from(T.req).update({...statusPatch(r,k),sup_id:r.sup_id||null}).eq('id',r.id))));
   if(k!=='new')await Promise.all(rs.filter(r=>r.sup_id).map(upsertPos));
   return rs.length;
 }
@@ -466,6 +473,7 @@ function openReq(id){
       <label class="f">Група<select id="e-g"><option value="">Без групи</option>${opts(D.groups.map(g=>[g.id,g.name]),r.group_id||'')}</select></label></div>
       <label class="f">Категорія<select id="e-c"><option value="">Без категорії</option>${opts(D.cats.map(c=>[c.id,c.name]),r.category_id||'')}</select></label>
       <label class="f">Постачальник<select id="e-sp"><option value="">Не вказано</option>${opts(D.suppliers.map(s=>[s.id,s.name]),r.sup_id||'')}</select></label>
+      ${r.sup_id?'':`<p class="hint" style="margin:6px 0 0">Якщо не вибрати, постачальник створиться сам за сайтом посилання (${esc(host(r.url))}), щойно заявка піде в роботу.</p>`}
       <div class="two"><label class="f">Рахунок №<input id="e-inv" value="${esc(r.inv)}"></label><label class="f">Сума, грн<input id="e-am" type="number" step="0.01" min="0" value="${r.amount??''}"></label></div>
       <label class="f">Видаткова накладна (ВН) №<input id="e-vn" value="${esc(r.vn)}"></label>
       <div class="two"><label class="f">Чим їде<select id="e-car"><option value="">—</option>${opts(CAR.map(c=>[c,c]),r.car)}</select></label><label class="f">ТТН / трек<input id="e-ttn" value="${esc(r.ttn)}" inputmode="numeric"></label></div>
@@ -578,8 +586,13 @@ document.addEventListener('submit',async e=>{
     if(!validate(t,u,qn,'#e-err'))return;
     const patch={title:t,url:u,qty:qn,unit:val('e-un'),note:val('e-n'),group_id:val('e-g')||null,category_id:val('e-c')||null,sup_id:val('e-sp')||null,inv:val('e-inv'),amount:val('e-am')?+val('e-am'):null,vn:val('e-vn'),car:val('e-car'),ttn:val('e-ttn'),eta:val('e-eta')||null,adm:val('e-adm')};
     const k=val('e-s');if(k!==r.status)Object.assign(patch,statusPatch(r,k));
-    closeOv();
-    act(async()=>{await q(sb.from(T.req).update(patch).eq('id',r.id));const n={...r,...patch};if(n.status!=='new'&&n.sup_id)await upsertPos(n)},'Збережено')}
+    const btn=f.querySelector('.btn.pri');btn.disabled=true;$('#e-err').textContent='';
+    try{
+      if((patch.status||r.status)!=='new'&&!patch.sup_id)patch.sup_id=await ensureSup(patch.url);
+      await q(sb.from(T.req).update(patch).eq('id',r.id));
+      const n={...r,...patch};if(n.status!=='new'&&n.sup_id)await upsertPos(n);
+    }catch(err){$('#e-err').textContent='Не вдалося зберегти: '+(err.message||err);btn.disabled=false;return}
+    closeOv();toast('Збережено');loadAll()}
 });
 /* перетягування заявок у групи */
 let drag=[];
