@@ -235,8 +235,8 @@ async function loadAll(){
   try{
     const [req,sups,pos,grs,cats]=await Promise.all([
       q(sb.from(isA?T.req:T.pub).select('*').order('created_at',{ascending:false})),
-      q(sb.from(T.sup).select(isA?'*':'id,name,site').order('name')),
-      q(sb.from(T.pos).select('*').order('title')),
+      q(isA?sb.from(T.sup).select('*').order('name'):sb.from(T.sup).select('id,site')),
+      q(isA?sb.from(T.pos).select('*').order('title'):sb.from(T.pos).select('id,sup_id,title,url,unit').order('title')),
       isA?q(sb.from(T.grp).select('*').order('created_at')):Promise.resolve([]),
       q(sb.from(T.cat).select('*').order('name'))]);
     D={requests:req||[],suppliers:sups||[],positions:pos||[],groups:grs||[],cats:cats||[]};U.err='';
@@ -281,7 +281,7 @@ function render(){
   $('#tabs').innerHTML=sb&&!U.err?[['req',isA?'Заявки':'Мої заявки'],['sup',isA?'Постачальники':'Каталог']].map(([k,t])=>`<button class="tab" data-tab="${k}" aria-current="${U.tab===k}">${t}</button>`).join(''):'';
   $('#who').innerHTML=!sb?'':isA?`<span class="em">Закупівлі: <b>${esc(email)}</b></span><button class="btn sm" data-logout>Вийти</button>`
     :`${ME.name?`<span>Ви: <b>${esc(ME.name)}</b>${ME.dept?' · '+esc(ME.dept):''}</span><button class="btn sm" data-setme>Змінити</button>`:''}<button class="btn sm" data-login>Вхід<span class="lg"> для закупівель</span></button>`;
-  $('#app').innerHTML=!sb?setupView():U.loading?'<p class="empty">Завантаження…</p>':U.err?errView():U.tab==='req'?(isA||ME.name?reqView():whoView()):supView();
+  $('#app').innerHTML=!sb?setupView():U.loading?'<p class="empty">Завантаження…</p>':U.err?errView():U.tab==='req'?(isA||ME.name?reqView():whoView()):isA?supView():catView();
   if(id){const el=document.getElementById(id);if(el&&el!==a&&el.tagName==='INPUT'){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
 function setupView(){return `<div class="card"><h1>Потрібне налаштування</h1><p>Відкрийте <code>index.html</code> і вставте вгорі скрипта <code>SUPABASE_URL</code> та <code>SUPABASE_ANON_KEY</code> (Supabase → Project Settings → API).</p></div>`}
@@ -314,7 +314,7 @@ function reqView(){
   const cT=U.cat==='all'?'':U.cat==='none'?'Без категорії':cat(U.cat)?.name||'';
   const title=a?([gT,cT].filter(Boolean).join(' · ')||'Усі заявки'):'Мої заявки';
   const open=base.filter(r=>r.status!=='got').length;
-  const head=a?['','Позиція','К-сть','Хто','Група · категорія','Постачальник','Статус','Рахунок · доставка','Дата']:['Позиція','К-сть','Постачальник','Статус','Доставка','Дата'];
+  const head=a?['','Позиція','К-сть','Хто','Група · категорія','Постачальник','Статус','Рахунок · доставка','Дата']:['Позиція','К-сть','Статус','Доставка','Дата'];
   const cols=head.length;
   let body='';
   if(!list.length)body=`<tr><td colspan="${cols}" class="empty">${U.q||U.status!=='all'||U.supF?'Нічого не знайдено за цим фільтром.':'Заявок ще немає. Натисніть «Нова заявка».'}</td></tr>`;
@@ -334,7 +334,7 @@ function reqView(){
     <p class="sub">${base.length} заявок, у роботі ${open}${base.filter(isLate).length?`, <span class="late">прострочено ${base.filter(isLate).length}</span>`:''}${a?'':'. Тут видно статус і чим їде ваше замовлення.'}</p>
     <div class="bar">
       <input type="search" id="q" placeholder="Пошук: назва, автор, рахунок, ТТН…" value="${esc(U.q)}" aria-label="Пошук">
-      <select id="by" aria-label="Групувати">${opts([['none','Без групування'],['sup','За постачальником'],['cat','За категорією'],['status','За статусом'],...(a?[['author','За автором']]:[])],U.by)}</select>
+      <select id="by" aria-label="Групувати">${opts([['none','Без групування'],...(a?[['sup','За постачальником']]:[]),['cat','За категорією'],['status','За статусом'],...(a?[['author','За автором']]:[])],U.by)}</select>
       <button class="btn pri" data-new>+ Нова заявка</button>
     </div>
     <div class="chips">${supFilter}<button class="chip ${U.status==='all'?'on':''}" data-st="all">Усі <b>${base.length}</b></button>${ST.map(s=>`<button class="chip ${U.status===s.k?'on':''}" data-st="${s.k}" style="--c:var(--c-${s.k})"><i></i>${s.t} <b>${cnt(s.k)}</b></button>`).join('')}</div>
@@ -357,7 +357,7 @@ function row(r){
   const pos=`<td class="nm"><b>${esc(r.title)}</b>${r.urgent?'<span class="urg">терміново</span>':''}<a class="lnk" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(host(r.url)||r.url)} ↗</a>${r.note?`<small>${esc(r.note)}</small>`:''}</td>`;
   const qty=`<td class="num">${esc(r.qty)} ${esc(r.unit)}</td>`;
   const ship=r.car?`${esc(r.car)}${r.ttn?`, ТТН ${esc(r.ttn)}`:''}`:'';
-  if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td>${esc(s?.name||'')}${ct?`<small>${esc(ct.name)}</small>`:''}</td><td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}${etaHtml(r)}</td><td class="num">${dt(r.created_at)}</td></tr>`;
+  if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}${etaHtml(r)}</td><td class="num">${dt(r.created_at)}</td></tr>`;
   const docs=[r.inv&&`Рах. ${esc(r.inv)}`,r.amount&&money(r.amount),r.vn&&`ВН ${esc(r.vn)}`].filter(Boolean).join(' · ');
   return `<tr data-id="${r.id}" draggable="true" class="${sel?'sel':''}">
     <td class="ck"><input type="checkbox" data-ck="${r.id}" ${sel?'checked':''} aria-label="Вибрати"></td>${pos}${qty}
@@ -406,6 +406,20 @@ function supView(){
   </main></div>`;
 }
 
+function catView(){
+  let list=D.positions.slice();
+  if(U.sq){const t=U.sq.toLowerCase();list=list.filter(p=>(p.title+' '+p.url).toLowerCase().includes(t))}
+  return `<main>
+    <h1>Каталог</h1>
+    <p class="sub">Те, що вже замовляли. Натисніть «Замовити», і назва з посиланням підставляться в заявку самі.</p>
+    <div class="bar"><input type="search" id="sq" placeholder="Пошук товару" value="${esc(U.sq)}" aria-label="Пошук товару"></div>
+    <table class="stack"><thead><tr><th>Позиція</th><th>Од.</th><th></th></tr></thead><tbody>
+    ${list.map(p=>`<tr><td class="nm"><b>${esc(p.title)}</b><a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(host(p.url))} ↗</a></td><td>${esc(p.unit)}</td><td><button class="btn sm pri" data-reqpos="${p.id}">Замовити</button></td></tr>`).join('')||`<tr><td colspan="3" class="empty">${U.sq?'Нічого не знайдено.':'Каталог поки порожній.'}</td></tr>`}
+    </tbody></table>
+    <button class="fab" data-new aria-label="Нова заявка">+</button>
+  </main>`;
+}
+
 /* ---------- вікна ---------- */
 let M=null;
 function closeOv(){$('#ov').innerHTML='';M=null}
@@ -419,7 +433,7 @@ function newReq(pre){
     <div class="cres" id="cres"></div>
     <label class="f">Назва *<input id="f-t" value="${esc(pre?.title||'')}"></label>
     <label class="f">Посилання *<input id="f-u" type="url" placeholder="https://…" value="${esc(pre?.url||'')}"></label>
-    <div class="picked" id="pk">${pre?.sup?'Постачальник: '+esc(sup(pre.sup)?.name):''}</div>
+    <div class="picked" id="pk">${isA&&pre?.sup?'Постачальник: '+esc(sup(pre.sup)?.name):''}</div>
     <div class="two"><label class="f">Кількість *<input id="f-q" type="number" min="0.01" step="any" inputmode="decimal"></label>
     <label class="f">Одиниця<select id="f-un">${opts(UNITS.map(x=>[x,x]),pre?.unit||'шт')}</select></label></div>
     <label class="f">Для чого / коментар<textarea id="f-n" placeholder="Напр.: для кабінету фізики, до 1 грудня"></textarea></label>
@@ -434,7 +448,7 @@ function newReq(pre){
 function catalogSearch(s){
   s=s.trim().toLowerCase();
   const res=s?D.positions.filter(p=>(p.title+' '+p.url+' '+(sup(p.sup_id)?.name||'')).toLowerCase().includes(s)).slice(0,8):[];
-  $('#cres').innerHTML=res.map(p=>`<button type="button" data-pick="${p.id}"><b>${esc(p.title)}</b><br><small>${esc(sup(p.sup_id)?.name||'')} · ${money(p.price)||'ціна невідома'} за ${esc(p.unit)}</small></button>`).join('')||(s?'<small style="color:var(--mute)">У каталозі немає. Заповніть поля нижче вручну.</small>':'');
+  $('#cres').innerHTML=res.map(p=>`<button type="button" data-pick="${p.id}"><b>${esc(p.title)}</b><br><small>${isA?`${esc(sup(p.sup_id)?.name||'')} · ${money(p.price)||'ціна невідома'} за `:'од.: '}${esc(p.unit)}</small></button>`).join('')||(s?'<small style="color:var(--mute)">У каталозі немає. Заповніть поля нижче вручну.</small>':'');
 }
 function openReq(id){
   const r=D.requests.find(x=>x.id===id);if(!r)return;
@@ -501,7 +515,7 @@ document.addEventListener('click',e=>{
   if(el=c('[data-showsup]')){U.tab='req';U.supF=el.dataset.showsup;U.group='all';U.status='all';render();return}
   if(el=c('[data-sup]')){U.sup=el.dataset.sup;render();return}
   if(el=c('[data-reqpos]')){const p=D.positions.find(x=>x.id===el.dataset.reqpos);newReq({title:p.title,url:p.url,sup:p.sup_id,unit:p.unit});return}
-  if(el=c('[data-pick]')){const p=D.positions.find(x=>x.id===el.dataset.pick);$('#f-t').value=p.title;$('#f-u').value=p.url;$('#f-un').value=p.unit;M.sup=p.sup_id;$('#pk').textContent='Постачальник: '+(sup(p.sup_id)?.name||'');$('#cres').innerHTML='';$('#f-q').focus();return}
+  if(el=c('[data-pick]')){const p=D.positions.find(x=>x.id===el.dataset.pick);$('#f-t').value=p.title;$('#f-u').value=p.url;$('#f-un').value=p.unit;M.sup=p.sup_id;$('#pk').textContent=isA?'Постачальник: '+(sup(p.sup_id)?.name||''):'Вибрано з каталогу';$('#cres').innerHTML='';$('#f-q').focus();return}
   if(el=c('[data-del]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно видалити?';return}const id=el.dataset.del;U.sel.delete(id);closeOv();act(()=>q(sb.from(T.req).delete().eq('id',id)),'Заявку видалено');return}
   if(t.matches('[data-ck],select,input,a')||c('a'))return;
   if(el=c('tr[data-id]')){openReq(el.dataset.id)}
@@ -533,7 +547,7 @@ document.addEventListener('input',e=>{
   if(t.id==='q'){U.q=t.value;render()}
   if(t.id==='sq'){U.sq=t.value;render()}
   if(t.id==='cq')catalogSearch(t.value);
-  if(t.id==='f-u'&&M&&M.kind==='new'){M.sup=guessSup(t.value);$('#pk').textContent=M.sup?'Постачальник визначено за посиланням: '+sup(M.sup).name:''}
+  if(t.id==='f-u'&&M&&M.kind==='new'){M.sup=guessSup(t.value);$('#pk').textContent=isA&&M.sup?'Постачальник визначено за посиланням: '+(sup(M.sup)?.name||''):''}
 });
 document.addEventListener('submit',async e=>{
   e.preventDefault();const f=e.target;
