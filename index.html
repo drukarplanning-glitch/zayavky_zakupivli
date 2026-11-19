@@ -123,6 +123,12 @@ tr.sec .btn{margin-inline-start:10px}
 .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0 12px}
 .fab{display:none;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--acc);color:var(--accInk);font-size:30px;line-height:1;border:0;box-shadow:0 6px 18px rgb(0 0 0/.25);z-index:6;align-items:center;justify-content:center}
 .mgr{display:none}
+.rpl{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:52vh;overflow:auto}
+.rpi{display:grid;grid-template-columns:auto minmax(0,1fr) 90px auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.rpi input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc)}
+.rpi small{display:block;color:var(--mute);font-size:13px}
+.rpi .rp-q{padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px;width:100%;text-align:right}
+.rpi em{font-style:normal;color:var(--mute);font-size:14px;min-width:3em}
 .item{border:1px solid var(--line);border-radius:12px;padding:2px 14px 14px;margin-top:14px}
 .ihead{display:flex;justify-content:space-between;align-items:center;margin-top:10px;min-height:34px}
 .aggh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-weight:400}
@@ -344,8 +350,9 @@ function reqView(){
   const cT=U.cat==='all'?'':U.cat==='none'?'Без категорії':cat(U.cat)?.name||'';
   const title=a?([gT,cT].filter(Boolean).join(' · ')||'Усі заявки'):'Мої заявки';
   const open=base.filter(r=>r.status!=='got').length;
-  const head=a?['','Позиція','К-сть','Хто','Група · категорія','Постачальник','Статус','Рахунок · доставка','Дата']:['Позиція','К-сть','Статус','Доставка','Дата'];
+  const head=a?['','Позиція','К-сть','Хто','Група · категорія','Постачальник','Статус','Рахунок · доставка','Дата']:['Позиція','К-сть','Статус','Доставка','Дата',''];
   const cols=head.length;
+  U.vis=list.map(r=>r.id);const allSel=list.length>0&&list.every(r=>U.sel.has(r.id));
   let body='';
   if(!list.length)body=`<tr><td colspan="${cols}" class="empty">${U.q||U.status!=='all'||U.supF?'Нічого не знайдено за цим фільтром.':'Заявок ще немає. Натисніть «Нова заявка».'}</td></tr>`;
   else if(U.by==='none')body=list.map(row).join('');
@@ -370,11 +377,13 @@ function reqView(){
     <div class="bar">
       <input type="search" id="q" placeholder="Пошук: назва, автор, рахунок, ТТН…" value="${esc(U.q)}" aria-label="Пошук">
       <select id="by" aria-label="Групувати">${opts([['none','Без групування'],...(a?[['item','Однакові позиції разом'],['sup','За постачальником']]:[]),['cat','За категорією'],['status','За статусом'],...(a?[['author','За автором']]:[])],U.by)}</select>
+      ${a&&list.length?`<button class="btn" data-selall>${allSel?'Зняти вибір':'Вибрати всі ('+list.length+')'}</button>`:''}
+      ${a&&grp(U.group)?`<button class="btn" data-repg="${U.group}">↻ Повторити закупівлю</button>`:''}
       <button class="btn pri" data-new>+ Нова заявка</button>
     </div>
     <div class="chips">${supFilter}<button class="chip ${U.status==='all'?'on':''}" data-st="all">Усі <b>${base.length}</b></button>${ST.map(s=>`<button class="chip ${U.status===s.k?'on':''}" data-st="${s.k}" style="--c:var(--c-${s.k})"><i></i>${s.t} <b>${cnt(s.k)}</b></button>`).join('')}</div>
     ${a&&U.sel.size?bulk():''}
-    <table class="stack"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>
+    <table class="stack"><thead><tr>${head.map((h,i)=>a&&i===0?`<th class="ck"><input type="checkbox" data-selall ${allSel?'checked':''} aria-label="Вибрати всі"></th>`:`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>
     <button class="fab" data-new aria-label="Нова заявка">+</button>
   </main></div>`;
 }
@@ -392,7 +401,7 @@ function row(r){
   const pos=`<td class="nm"><b>${esc(r.title)}</b>${r.urgent?'<span class="urg">терміново</span>':''}${r.url?`<a class="lnk" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(host(r.url)||r.url)} ↗</a>`:r.pos_id?'<small>з каталогу</small>':''}${r.note?`<small>${esc(r.note)}</small>`:''}</td>`;
   const qty=`<td class="num">${esc(r.qty)} ${esc(r.unit)}</td>`;
   const ship=r.car?`${esc(r.car)}${r.ttn?`, ТТН ${esc(r.ttn)}`:''}`:'';
-  if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}${etaHtml(r)}</td><td class="num">${dt(r.created_at)}</td></tr>`;
+  if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}${etaHtml(r)}</td><td class="num">${dt(r.created_at)}</td><td><button class="btn sm" data-rep="${r.id}">↻ Повторити</button></td></tr>`;
   const docs=[r.inv&&`Рах. ${esc(r.inv)}`,r.amount&&money(r.amount),r.vn&&`ВН ${esc(r.vn)}`].filter(Boolean).join(' · ');
   return `<tr data-id="${r.id}" draggable="true" class="${sel?'sel':''}">
     <td class="ck"><input type="checkbox" data-ck="${r.id}" ${sel?'checked':''} aria-label="Вибрати"></td>${pos}${qty}
@@ -467,7 +476,7 @@ function itemHtml(pre){
     <label class="f">Назва *<input class="it-t" value="${esc(pre?.title||'')}"></label>
     <label class="f">Посилання<input class="it-u" type="url" placeholder="https://…" value="${esc(pre?.url||'')}"></label>
     <div class="picked">${isA&&pre?.sup?'Постачальник: '+esc(sup(pre.sup)?.name||''):pre?'Вибрано з каталогу':''}</div>
-    <div class="two"><label class="f">Кількість *<input class="it-q" type="number" min="0.01" step="any" inputmode="decimal"></label>
+    <div class="two"><label class="f">Кількість *<input class="it-q" type="number" min="0.01" step="any" inputmode="decimal" value="${pre?.qty??''}"></label>
     <label class="f">Одиниця<select class="it-un">${opts(UNITS.map(x=>[x,x]),pre?.unit||'шт')}</select></label></div>
   </div>`;
 }
@@ -480,9 +489,9 @@ function newReq(pre){
     <label class="f">Відділ / локація<input id="f-dept" list="depts" value="${esc(ME.dept)}"></label></div>${deptList}
     <div id="items">${itemHtml(pre)}</div>
     <button type="button" class="btn" data-additem style="margin-top:12px;width:100%">+ Ще позиція</button>
-    <label class="f">Для чого / коментар (до всіх позицій)<textarea id="f-n" placeholder="Напр.: для кабінету фізики, до 1 грудня"></textarea></label>
+    <label class="f">Для чого / коментар (до всіх позицій)<textarea id="f-n" placeholder="Напр.: для кабінету фізики, до 1 грудня">${esc(pre?.note||'')}</textarea></label>
     <label class="f" style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="f-urg" style="width:20px;height:20px;margin:0;accent-color:var(--acc)"> Терміново</label>
-    ${D.cats.length?`<label class="f">Категорія<select id="f-c"><option value="">Не вибрано</option>${opts(D.cats.map(c=>[c.id,c.name]),!['all','none'].includes(U.cat)?U.cat:'')}</select></label>`:''}
+    ${D.cats.length?`<label class="f">Категорія<select id="f-c"><option value="">Не вибрано</option>${opts(D.cats.map(c=>[c.id,c.name]),pre?.cat||(!['all','none'].includes(U.cat)?U.cat:''))}</select></label>`:''}
     ${isA?`<label class="f">Група<select id="f-g"><option value="">Без групи</option>${opts(D.groups.map(g=>[g.id,g.name]),!['all','none'].includes(U.group)?U.group:'')}</select></label>`:''}
     <p class="err" id="f-err"></p>
     <div class="acts"><button class="btn pri" id="f-go">Створити заявку</button><button type="button" class="btn" data-x>Скасувати</button></div>
@@ -520,9 +529,27 @@ function openReq(id){
     :`<fieldset class="box"><legend>Статус</legend><p><span class="st s-${r.status}">${stT(r.status)}</span></p>${r.car?`<p style="margin:0">Їде: <b>${esc(r.car)}</b>${r.ttn?`, ТТН ${esc(r.ttn)}`:''}</p>`:''}${r.eta&&r.status!=='got'?`<p style="margin:6px 0 0" class="${isLate(r)?'late':''}">Очікується: <b>${fEta(r.eta)}</b></p>`:''}<p class="hint" style="margin:10px 0 0">Щоб щось змінити в заявці, напишіть у відділ закупівель.</p></fieldset>`}
     ${a?`<ol class="hist"><li>${dtt(r.created_at)}: створено</li>${(r.hist||[]).map(h=>`<li>${dtt(h.t)}: ${stT(h.s)}</li>`).join('')}</ol>`:''}
     <p class="err" id="e-err"></p>
-    <div class="acts">${a?'<button class="btn pri">Зберегти</button>':''}<button type="button" class="btn" data-x>${a?'Скасувати':'Закрити'}</button>${a?`<button type="button" class="btn warn" data-del="${r.id}">Видалити</button>`:''}</div>
+    <div class="acts">${a?'<button class="btn pri">Зберегти</button>':''}<button type="button" class="btn" data-rep="${r.id}">↻ Повторити заявку</button><button type="button" class="btn" data-x>${a?'Скасувати':'Закрити'}</button>${a?`<button type="button" class="btn warn" data-del="${r.id}">Видалити</button>`:''}</div>
   </form></div>`;
 }
+function repeatBox(gid){
+  const g=grp(gid);if(!g)return;
+  const rs=D.requests.filter(r=>r.group_id===gid).sort((x,y)=>x.title.localeCompare(y.title,'uk'));
+  if(!rs.length){toast('У групі немає заявок');return}
+  const d=new Date(),dd=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0');
+  const base=g.name.replace(/\s*\d{2}\.\d{2}(\.\d{2,4})?\s*$/,'').trim();
+  M={kind:'repeat',gid};
+  $('#ov').innerHTML=`<div class="ovl center" data-close><form class="panel" id="rpf" style="width:min(640px,100%)">
+    <h2>Повторити закупівлю</h2><p class="sub" style="margin:0">З групи «${esc(g.name)}». Нові заявки будуть зі статусом «Не замовлено», без рахунків і доставки.</p>
+    <label class="f">Назва нової групи<input id="rp-n" value="${esc(base+' '+dd)}"></label>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><b>Позиції (${rs.length})</b><button type="button" class="btn sm" data-rpall>Зняти / вибрати всі</button></div>
+    <div class="rpl">${rs.map(r=>`<label class="rpi"><input type="checkbox" class="rp-c" data-id="${r.id}" checked><span><b>${esc(r.title)}</b><small>${esc(r.author_name)}${r.author_dept?' · '+esc(r.author_dept):''}</small></span><input class="rp-q" data-id="${r.id}" type="number" min="0.01" step="any" value="${esc(r.qty)}" aria-label="Кількість"><em>${esc(r.unit)}</em></label>`).join('')}</div>
+    <p class="err" id="rp-err"></p>
+    <div class="acts"><button class="btn pri" id="rp-go">Створити заявки</button><button type="button" class="btn" data-x>Скасувати</button></div>
+  </form></div>`;
+  rpCount();
+}
+function rpCount(){const n=document.querySelectorAll('.rp-c:checked').length,b=$('#rp-go');if(b)b.textContent=n?`Створити заявки (${n})`:'Нічого не вибрано'}
 function loginBox(){
   M={kind:'login'};
   $('#ov').innerHTML=`<div class="ovl center" data-close><form class="panel" id="lgf"><h2>Вхід для закупівель</h2>
@@ -558,6 +585,10 @@ document.addEventListener('click',e=>{
   if(c('[data-additem]')){$('#items').insertAdjacentHTML('beforeend',itemHtml());renumber();[...document.querySelectorAll('#items .cq')].pop().focus();return}
   if(el=c('[data-rmitem]')){el.closest('.item').remove();renumber();return}
   if(el=c('[data-pick]')){const p=D.positions.find(x=>x.id===el.dataset.pick),it=el.closest('.item');it.querySelector('.it-t').value=p.title;it.querySelector('.it-u').value=p.url;it.querySelector('.it-un').value=p.unit;it.dataset.sup=p.sup_id||'';it.dataset.pos=p.id;it.querySelector('.picked').textContent=isA?'Постачальник: '+(sup(p.sup_id)?.name||''):'Вибрано з каталогу';it.querySelector('.cres').innerHTML='';it.querySelector('.cq').value='';it.querySelector('.it-q').focus();return}
+  if(c('[data-selall]')){const ids=U.vis||[],all=ids.length&&ids.every(id=>U.sel.has(id));ids.forEach(id=>all?U.sel.delete(id):U.sel.add(id));render();return}
+  if(el=c('[data-rep]')){const r=D.requests.find(x=>x.id===el.dataset.rep);if(!r)return;closeOv();newReq({title:r.title,url:r.url||'',sup:r.sup_id,unit:r.unit,pos:r.pos_id,qty:r.qty,note:r.note,cat:r.category_id});return}
+  if(el=c('[data-repg]')){repeatBox(el.dataset.repg);return}
+  if(c('[data-rpall]')){const cs=[...document.querySelectorAll('.rp-c')],on=cs.some(x=>!x.checked);cs.forEach(x=>x.checked=on);rpCount();return}
   if(c('[data-mgr]')){U.mgr=!U.mgr;render();return}
   if(c('[data-new]')){newReq();return}
   if(el=c('[data-orderall]')){const id=el.dataset.orderall;el.disabled=true;act(async()=>{const n=await setStatus(D.requests.filter(r=>r.sup_id===id&&r.status==='new'),'invoice');toast(`${n} заявок → «Очікую рахунок»`)});return}
@@ -576,6 +607,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('change',e=>{
   const t=e.target;
+  if(t.classList.contains('rp-c')){rpCount();return}
   if(t.id==='by'){U.by=t.value;render();return}
   if(t.dataset.ck){t.checked?U.sel.add(t.dataset.ck):U.sel.delete(t.dataset.ck);render();return}
   if(t.dataset.aggst&&t.value){const ids=U.agg[+t.dataset.aggst]||[],k=t.value,rs=D.requests.filter(r=>ids.includes(r.id));act(async()=>{const n=await setStatus(rs,k);toast(`${n} заявок → «${stT(k)}»`)});return}
@@ -611,6 +643,19 @@ document.addEventListener('submit',async e=>{
     if(!isA){$('#l-err').textContent='Цей акаунт не має доступу адміністратора.';$('#l-go').disabled=false;return}
     closeOv();U.loading=true;render();loadAll();return}
   if(f.id==='ngf'){const n=val('ngn');if(!n)return;act(async()=>{const g=await q(sb.from(T.grp).insert({name:n}).select().single());U.group=g.id},'Групу створено');return}
+  if(f.id==='rpf'){
+    const name=val('rp-n'),err=$('#rp-err');if(!name){err.textContent='Вкажіть назву групи.';return}
+    const ids=[...document.querySelectorAll('.rp-c:checked')].map(x=>x.dataset.id);if(!ids.length){err.textContent='Виберіть хоча б одну позицію.';return}
+    const qs={};document.querySelectorAll('.rp-q').forEach(x=>qs[x.dataset.id]=+x.value);
+    if(ids.some(id=>!(qs[id]>0))){err.textContent='Вкажіть кількість, більшу за 0, для всіх вибраних позицій.';return}
+    const src=D.requests.filter(r=>ids.includes(r.id)),old=grp(M.gid);
+    $('#rp-go').disabled=true;
+    try{
+      const g=await q(sb.from(T.grp).insert({name}).select().single());
+      await q(sb.from(T.req).insert(src.map(r=>({title:r.title,url:r.url||null,pos_id:r.pos_id||null,qty:qs[r.id],unit:r.unit,author_name:r.author_name,author_dept:r.author_dept||'',note:r.note||'',urgent:false,sup_id:r.sup_id||null,category_id:r.category_id||null,group_id:g.id}))));
+      U.group=g.id;
+    }catch(e2){err.textContent='Не вдалося створити: '+(e2.message||e2);$('#rp-go').disabled=false;return}
+    closeOv();U.status='all';toast(`Створено групу «${name}» з ${src.length} заявками`);loadAll();return}
   if(f.id==='ncf'){const n=val('ncn');if(!n)return;act(()=>q(sb.from(T.cat).insert({name:n})),'Категорію створено');return}
   if(f.id==='nsf'){const n=val('nsn');if(!n)return;act(async()=>{const s=await q(sb.from(T.sup).insert({name:n}).select().single());U.sup=s.id;U.sq=''});return}
   if(f.id==='npf'){const t=val('np-t'),u=val('np-u');if(!t||!/^https?:\/\//.test(u)){toast('Вкажіть назву і посилання з https://');return}const row={sup_id:U.sup==='__none'?null:U.sup,title:t,url:u,unit:val('np-un'),manual:true};if(val('np-p'))row.price=+val('np-p');act(()=>q(sb.from(T.pos).upsert(row,{onConflict:'url'})),'Позицію додано');return}
