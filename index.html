@@ -123,6 +123,11 @@ tr.sec .btn{margin-inline-start:10px}
 .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0 12px}
 .fab{display:none;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--acc);color:var(--accInk);font-size:30px;line-height:1;border:0;box-shadow:0 6px 18px rgb(0 0 0/.25);z-index:6;align-items:center;justify-content:center}
 .mgr{display:none}
+.item{border:1px solid var(--line);border-radius:12px;padding:2px 14px 14px;margin-top:14px}
+.ihead{display:flex;justify-content:space-between;align-items:center;margin-top:10px;min-height:34px}
+.aggh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-weight:400}
+.aggh small{color:var(--mute);flex-basis:100%;font-size:13px}
+.tot{color:var(--acc)}
 .late{color:#c2253d!important;font-weight:600}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:15px;z-index:30;transition:opacity .2s}
 .card{max-width:560px;margin:32px auto;padding:24px;border:1px solid var(--line);border-radius:14px}
@@ -225,6 +230,10 @@ const nowIso=()=>new Date().toISOString();
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 const fEta=e=>{const p=String(e).split('-');return p[2]+'.'+p[1]};
 const isLate=r=>!!r.eta&&r.status!=='got'&&r.eta<today();
+const fq=n=>Number(n).toLocaleString('uk-UA',{maximumFractionDigits:2});
+const itemKey=r=>{let k;try{const x=new URL(r.url);[...x.searchParams.keys()].forEach(p=>{if(/^(utm_|fbclid|gclid)/.test(p))x.searchParams.delete(p)});k=(x.host.replace(/^www\./,'')+x.pathname.replace(/\/$/,'')+x.search).toLowerCase()}catch(e){k=norm(r.title)}return k+'|'+norm(r.unit)};
+const aggregate=list=>{const m=new Map();for(const r of list){const k=itemKey(r);if(!m.has(k))m.set(k,[]);m.get(k).push(r)}return [...m.values()].map(rs=>({rs,tot:rs.reduce((t,r)=>t+(+r.qty||0),0)}))};
+const plural=n=>n%10===1&&n%100!==11?'заявка':[2,3,4].includes(n%10)&&![12,13,14].includes(n%100)?'заявки':'заявок';
 const etaHtml=r=>r.eta&&r.status!=='got'?`<small class="${isLate(r)?'late':''}">Очікується ${fEta(r.eta)}${isLate(r)?' · прострочено':''}</small>`:'';
 let tt;
 function toast(m){let el=$('.toast');if(!el){el=document.createElement('div');el.className='toast';document.body.append(el)}el.textContent=m;el.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>el.style.opacity=0,2600)}
@@ -326,6 +335,11 @@ function reqView(){
   let body='';
   if(!list.length)body=`<tr><td colspan="${cols}" class="empty">${U.q||U.status!=='all'||U.supF?'Нічого не знайдено за цим фільтром.':'Заявок ще немає. Натисніть «Нова заявка».'}</td></tr>`;
   else if(U.by==='none')body=list.map(row).join('');
+  else if(U.by==='item'){
+    U.agg=[];
+    body=aggregate(list).sort((x,y)=>y.rs.length-x.rs.length||y.tot-x.tot).map((g,i)=>{U.agg[i]=g.rs.map(r=>r.id);const r0=g.rs[0];
+      return `<tr class="sec agg"><td colspan="${cols}"><div class="aggh"><span><b>${esc(r0.title)}</b> — разом <b class="tot">${fq(g.tot)} ${esc(r0.unit)}</b> · ${g.rs.length} ${plural(g.rs.length)}</span>${a&&g.rs.length>1?`<select class="st" data-aggst="${i}" aria-label="Статус для всіх"><option value="">Статус для всіх…</option>${opts(ST.map(x=>[x.k,x.t]))}</select>`:''}<small>${g.rs.map(r=>`${esc(r.author_name)}: ${fq(r.qty)}`).join(', ')}</small></div></td></tr>`+g.rs.map(row).join('')}).join('');
+  }
   else{
     const key={sup:r=>r.sup_id||'',cat:r=>r.category_id||'',status:r=>r.status,author:r=>norm(r.author_name)}[U.by];
     const keys=[...new Set(list.map(key))];
@@ -341,7 +355,7 @@ function reqView(){
     <p class="sub">${base.length} заявок, у роботі ${open}${base.filter(isLate).length?`, <span class="late">прострочено ${base.filter(isLate).length}</span>`:''}${a?'':'. Тут видно статус і чим їде ваше замовлення.'}</p>
     <div class="bar">
       <input type="search" id="q" placeholder="Пошук: назва, автор, рахунок, ТТН…" value="${esc(U.q)}" aria-label="Пошук">
-      <select id="by" aria-label="Групувати">${opts([['none','Без групування'],...(a?[['sup','За постачальником']]:[]),['cat','За категорією'],['status','За статусом'],...(a?[['author','За автором']]:[])],U.by)}</select>
+      <select id="by" aria-label="Групувати">${opts([['none','Без групування'],...(a?[['item','Однакові позиції разом'],['sup','За постачальником']]:[]),['cat','За категорією'],['status','За статусом'],...(a?[['author','За автором']]:[])],U.by)}</select>
       <button class="btn pri" data-new>+ Нова заявка</button>
     </div>
     <div class="chips">${supFilter}<button class="chip ${U.status==='all'?'on':''}" data-st="all">Усі <b>${base.length}</b></button>${ST.map(s=>`<button class="chip ${U.status===s.k?'on':''}" data-st="${s.k}" style="--c:var(--c-${s.k})"><i></i>${s.t} <b>${cnt(s.k)}</b></button>`).join('')}</div>
@@ -397,7 +411,7 @@ function supView(){
     <h1>${esc(s.name)}</h1>
     <p class="sub">${s.site?`<a class="lnk" style="display:inline" href="https://${esc(s.site)}" target="_blank" rel="noopener">${esc(s.site)} ↗</a>`:''}</p>
     ${a?`<div class="kpis"><div class="kpi"><b>${wait.length}</b>чекають замовлення</div><div class="kpi"><b>${rs.filter(r=>['invoice','pay','paid'].includes(r.status)).length}</b>у процесі</div><div class="kpi"><b>${rs.filter(r=>r.status==='got').length}</b>отримано</div><div class="kpi"><b>${money(spent)||'0 грн'}</b>оплачено всього</div></div>
-    ${wait.length?`<div class="wait"><h3>Чекають замовлення: ${wait.length}</h3><ul>${wait.map(r=>`<li>${esc(r.title)}, ${esc(r.qty)} ${esc(r.unit)} <small style="color:var(--mute)">(${esc(r.author_name)})</small></li>`).join('')}</ul>
+    ${wait.length?`<div class="wait"><h3>Чекають замовлення: ${wait.length}</h3><ul>${aggregate(wait).map(g=>`<li><b>${esc(g.rs[0].title)}</b> — ${fq(g.tot)} ${esc(g.rs[0].unit)} <small style="color:var(--mute)">(${g.rs.map(r=>`${esc(r.author_name)}: ${fq(r.qty)}`).join(', ')})</small></li>`).join('')}</ul>
       <div class="acts" style="margin:0"><button class="btn pri" data-orderall="${s.id}">Замовити все → «Очікую рахунок»</button><button class="btn" data-showsup="${s.id}">Відкрити в заявках</button></div></div>`:''}
     <fieldset class="box"><legend>Дані постачальника</legend><div class="meta">
       <label class="f">Назва<input data-sf="name" value="${esc(s.name)}"></label>
@@ -430,32 +444,41 @@ function catView(){
 /* ---------- вікна ---------- */
 let M=null;
 function closeOv(){$('#ov').innerHTML='';M=null}
+function itemHtml(pre){
+  return `<div class="item"${pre?.sup?` data-sup="${esc(pre.sup)}"`:''}>
+    <div class="ihead"><b class="inum"></b><button type="button" class="btn sm" data-rmitem>Прибрати</button></div>
+    <label class="f">Вибрати з каталогу<input class="cq" placeholder="Почніть вводити: папір, печиво, пластик…" autocomplete="off"></label>
+    <div class="cres"></div>
+    <label class="f">Назва *<input class="it-t" value="${esc(pre?.title||'')}"></label>
+    <label class="f">Посилання *<input class="it-u" type="url" placeholder="https://…" value="${esc(pre?.url||'')}"></label>
+    <div class="picked">${isA&&pre?.sup?'Постачальник: '+esc(sup(pre.sup)?.name||''):pre?'Вибрано з каталогу':''}</div>
+    <div class="two"><label class="f">Кількість *<input class="it-q" type="number" min="0.01" step="any" inputmode="decimal"></label>
+    <label class="f">Одиниця<select class="it-un">${opts(UNITS.map(x=>[x,x]),pre?.unit||'шт')}</select></label></div>
+  </div>`;
+}
+function renumber(){const its=[...document.querySelectorAll('#items .item')];its.forEach((el,i)=>{el.querySelector('.inum').textContent='Позиція '+(i+1);el.querySelector('[data-rmitem]').hidden=its.length<2});const g=$('#f-go');if(g)g.textContent=its.length>1?`Створити заявки (${its.length})`:'Створити заявку'}
 function newReq(pre){
-  M={kind:'new',sup:pre?.sup||null};
+  M={kind:'new'};
   $('#ov').innerHTML=`<div class="ovl center" data-close><form class="panel" id="nrf" novalidate>
     <h2>Нова заявка</h2>
     <div class="two"><label class="f">Ваше ім'я *<input id="f-who" value="${esc(ME.name)}" autocomplete="name"></label>
     <label class="f">Відділ / локація<input id="f-dept" list="depts" value="${esc(ME.dept)}"></label></div>${deptList}
-    <label class="f">Вибрати з каталогу (те, що вже замовляли)<input id="cq" placeholder="Почніть вводити: arduino, папір, пластик…" autocomplete="off"></label>
-    <div class="cres" id="cres"></div>
-    <label class="f">Назва *<input id="f-t" value="${esc(pre?.title||'')}"></label>
-    <label class="f">Посилання *<input id="f-u" type="url" placeholder="https://…" value="${esc(pre?.url||'')}"></label>
-    <div class="picked" id="pk">${isA&&pre?.sup?'Постачальник: '+esc(sup(pre.sup)?.name):''}</div>
-    <div class="two"><label class="f">Кількість *<input id="f-q" type="number" min="0.01" step="any" inputmode="decimal"></label>
-    <label class="f">Одиниця<select id="f-un">${opts(UNITS.map(x=>[x,x]),pre?.unit||'шт')}</select></label></div>
-    <label class="f">Для чого / коментар<textarea id="f-n" placeholder="Напр.: для кабінету фізики, до 1 грудня"></textarea></label>
+    <div id="items">${itemHtml(pre)}</div>
+    <button type="button" class="btn" data-additem style="margin-top:12px;width:100%">+ Ще позиція</button>
+    <label class="f">Для чого / коментар (до всіх позицій)<textarea id="f-n" placeholder="Напр.: для кабінету фізики, до 1 грудня"></textarea></label>
     <label class="f" style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="f-urg" style="width:20px;height:20px;margin:0;accent-color:var(--acc)"> Терміново</label>
     ${D.cats.length?`<label class="f">Категорія<select id="f-c"><option value="">Не вибрано</option>${opts(D.cats.map(c=>[c.id,c.name]),!['all','none'].includes(U.cat)?U.cat:'')}</select></label>`:''}
     ${isA?`<label class="f">Група<select id="f-g"><option value="">Без групи</option>${opts(D.groups.map(g=>[g.id,g.name]),!['all','none'].includes(U.group)?U.group:'')}</select></label>`:''}
     <p class="err" id="f-err"></p>
     <div class="acts"><button class="btn pri" id="f-go">Створити заявку</button><button type="button" class="btn" data-x>Скасувати</button></div>
   </form></div>`;
-  (!ME.name?$('#f-who'):pre?$('#f-q'):$('#cq')).focus();
+  renumber();
+  (!ME.name?$('#f-who'):pre?$('#items .it-q'):$('#items .cq')).focus();
 }
-function catalogSearch(s){
-  s=s.trim().toLowerCase();
+function catalogSearch(inp){
+  const s=inp.value.trim().toLowerCase(),box=inp.closest('.item').querySelector('.cres');
   const res=s?D.positions.filter(p=>(p.title+' '+p.url+' '+(sup(p.sup_id)?.name||'')).toLowerCase().includes(s)).slice(0,8):[];
-  $('#cres').innerHTML=res.map(p=>`<button type="button" data-pick="${p.id}"><b>${esc(p.title)}</b><br><small>${isA?`${esc(sup(p.sup_id)?.name||'')} · ${money(p.price)||'ціна невідома'} за `:'од.: '}${esc(p.unit)}</small></button>`).join('')||(s?'<small style="color:var(--mute)">У каталозі немає. Заповніть поля нижче вручну.</small>':'');
+  box.innerHTML=res.map(p=>`<button type="button" data-pick="${p.id}"><b>${esc(p.title)}</b><br><small>${isA?`${esc(sup(p.sup_id)?.name||'')} · ${money(p.price)||'ціна невідома'} за `:'од.: '}${esc(p.unit)}</small></button>`).join('')||(s?'<small style="color:var(--mute)">У каталозі немає. Заповніть поля нижче вручну.</small>':'');
 }
 function openReq(id){
   const r=D.requests.find(x=>x.id===id);if(!r)return;
@@ -517,13 +540,15 @@ document.addEventListener('click',e=>{
   if(el=c('[data-st]')){U.status=el.dataset.st;render();return}
   if(c('[data-clrsup]')){U.supF=null;render();return}
   if(c('[data-clrsel]')){U.sel.clear();render();return}
+  if(c('[data-additem]')){$('#items').insertAdjacentHTML('beforeend',itemHtml());renumber();[...document.querySelectorAll('#items .cq')].pop().focus();return}
+  if(el=c('[data-rmitem]')){el.closest('.item').remove();renumber();return}
+  if(el=c('[data-pick]')){const p=D.positions.find(x=>x.id===el.dataset.pick),it=el.closest('.item');it.querySelector('.it-t').value=p.title;it.querySelector('.it-u').value=p.url;it.querySelector('.it-un').value=p.unit;it.dataset.sup=p.sup_id||'';it.querySelector('.picked').textContent=isA?'Постачальник: '+(sup(p.sup_id)?.name||''):'Вибрано з каталогу';it.querySelector('.cres').innerHTML='';it.querySelector('.cq').value='';it.querySelector('.it-q').focus();return}
   if(c('[data-mgr]')){U.mgr=!U.mgr;render();return}
   if(c('[data-new]')){newReq();return}
   if(el=c('[data-orderall]')){const id=el.dataset.orderall;el.disabled=true;act(async()=>{const n=await setStatus(D.requests.filter(r=>r.sup_id===id&&r.status==='new'),'invoice');toast(`${n} заявок → «Очікую рахунок»`)});return}
   if(el=c('[data-showsup]')){U.tab='req';U.supF=el.dataset.showsup;U.group='all';U.status='all';render();return}
   if(el=c('[data-sup]')){U.sup=el.dataset.sup;render();return}
   if(el=c('[data-reqpos]')){const p=D.positions.find(x=>x.id===el.dataset.reqpos);newReq({title:p.title,url:p.url,sup:p.sup_id,unit:p.unit});return}
-  if(el=c('[data-pick]')){const p=D.positions.find(x=>x.id===el.dataset.pick);$('#f-t').value=p.title;$('#f-u').value=p.url;$('#f-un').value=p.unit;M.sup=p.sup_id;$('#pk').textContent=isA?'Постачальник: '+(sup(p.sup_id)?.name||''):'Вибрано з каталогу';$('#cres').innerHTML='';$('#f-q').focus();return}
   if(el=c('[data-del]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно видалити?';return}const id=el.dataset.del;U.sel.delete(id);closeOv();act(()=>q(sb.from(T.req).delete().eq('id',id)),'Заявку видалено');return}
   if(t.matches('[data-ck],select,input,a')||c('a'))return;
   if(el=c('tr[data-id]')){openReq(el.dataset.id)}
@@ -537,6 +562,7 @@ document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='by'){U.by=t.value;render();return}
   if(t.dataset.ck){t.checked?U.sel.add(t.dataset.ck):U.sel.delete(t.dataset.ck);render();return}
+  if(t.dataset.aggst&&t.value){const ids=U.agg[+t.dataset.aggst]||[],k=t.value,rs=D.requests.filter(r=>ids.includes(r.id));act(async()=>{const n=await setStatus(rs,k);toast(`${n} заявок → «${stT(k)}»`)});return}
   if(t.dataset.rst){const r=D.requests.find(x=>x.id===t.dataset.rst);const k=t.value;act(()=>setStatus([r],k),`«${r.title}» → ${stT(k)}`);return}
   if(['bst','bgr','bsp','bct','bet'].includes(t.id)&&t.value){
     const rs=D.requests.filter(r=>U.sel.has(r.id)),ids=rs.map(r=>r.id),v=t.value,kind=t.id;
@@ -554,8 +580,8 @@ document.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='q'){U.q=t.value;render()}
   if(t.id==='sq'){U.sq=t.value;render()}
-  if(t.id==='cq')catalogSearch(t.value);
-  if(t.id==='f-u'&&M&&M.kind==='new'){M.sup=guessSup(t.value);$('#pk').textContent=isA&&M.sup?'Постачальник визначено за посиланням: '+(sup(M.sup)?.name||''):''}
+  if(t.classList.contains('cq'))catalogSearch(t);
+  if(t.classList.contains('it-u')){const it=t.closest('.item');it.dataset.sup=guessSup(t.value)||'';it.querySelector('.picked').textContent=isA&&it.dataset.sup?'Постачальник визначено за посиланням: '+(sup(it.dataset.sup)?.name||''):''}
 });
 document.addEventListener('submit',async e=>{
   e.preventDefault();const f=e.target;
@@ -572,14 +598,20 @@ document.addEventListener('submit',async e=>{
   if(f.id==='nsf'){const n=val('nsn');if(!n)return;act(async()=>{const s=await q(sb.from(T.sup).insert({name:n}).select().single());U.sup=s.id;U.sq=''});return}
   if(f.id==='npf'){const t=val('np-t'),u=val('np-u');if(!t||!/^https?:\/\//.test(u)){toast('Вкажіть назву і посилання з https://');return}const row={sup_id:U.sup,title:t,url:u,unit:val('np-un')};if(val('np-p'))row.price=+val('np-p');act(()=>q(sb.from(T.pos).upsert(row,{onConflict:'url'})),'Позицію додано');return}
   if(f.id==='nrf'){
-    const who=val('f-who'),t=val('f-t'),u=val('f-u'),qn=+val('f-q');
-    if(!validate(t,u,qn,'#f-err',who))return;
+    const who=val('f-who'),err=$('#f-err');
+    if(!who){err.textContent="Вкажіть своє ім'я.";return}
+    const its=[...document.querySelectorAll('#items .item')].map(it=>({t:it.querySelector('.it-t').value.trim(),u:it.querySelector('.it-u').value.trim(),q:+it.querySelector('.it-q').value,un:it.querySelector('.it-un').value,sup:it.dataset.sup||null}));
+    for(const [i,x] of its.entries()){
+      const m=!x.t?'вкажіть назву.':!/^https?:\/\/\S+\.\S+/.test(x.u)?'вкажіть посилання, що починається з https://':!(x.q>0)?'вкажіть кількість, більшу за 0.':'';
+      if(m){err.textContent=(its.length>1?`Позиція ${i+1}: `:'')+m.charAt(0).toUpperCase()+m.slice(1);return}
+    }
     ME={name:who,dept:val('f-dept')};saveMe();
-    const row={title:t,url:u,qty:qn,unit:val('f-un'),author_name:who,author_dept:ME.dept,note:val('f-n'),urgent:$('#f-urg').checked,sup_id:M.sup||guessSup(u),category_id:val('f-c')||null};
-    if(isA)row.group_id=val('f-g')||null;
+    const common={author_name:who,author_dept:ME.dept,note:val('f-n'),urgent:$('#f-urg').checked,category_id:val('f-c')||null};
+    if(isA)common.group_id=val('f-g')||null;
+    const rows=its.map(x=>({title:x.t,url:x.u,qty:x.q,unit:x.un,sup_id:x.sup||guessSup(x.u),...common}));
     $('#f-go').disabled=true;
-    try{await q(sb.from(T.req).insert(row))}catch(err){$('#f-err').textContent='Не вдалося зберегти: '+(err.message||err);$('#f-go').disabled=false;return}
-    closeOv();U.tab='req';U.status='all';toast('Заявку створено');loadAll();return}
+    try{await q(sb.from(T.req).insert(rows))}catch(e2){err.textContent='Не вдалося зберегти: '+(e2.message||e2);$('#f-go').disabled=false;return}
+    closeOv();U.tab='req';U.status='all';toast(rows.length>1?`Створено заявок: ${rows.length}`:'Заявку створено');loadAll();return}
   if(f.id==='erf'){
     const r=D.requests.find(x=>x.id===M.id);
     const t=val('e-t'),u=val('e-u'),qn=+val('e-q');
