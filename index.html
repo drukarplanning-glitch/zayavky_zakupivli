@@ -126,6 +126,7 @@ tr.sec .btn{margin-inline-start:10px}
 .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0 12px}
 .fab{display:none;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--acc);color:var(--accInk);font-size:30px;line-height:1;border:0;box-shadow:0 6px 18px rgb(0 0 0/.25);z-index:6;align-items:center;justify-content:center}
 .mgr{display:none}
+.tplsave{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;border-top:1px dashed var(--line);margin-top:16px;padding-top:4px}.tplsave .f{flex:1 1 220px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:12px;gap:2px}
 .seg button{border:0;background:none;padding:8px 14px;border-radius:7px;font-weight:600;color:var(--mute);min-height:38px}
 .seg button.on{background:var(--ink);color:var(--bg)}
@@ -243,14 +244,14 @@ const SUPABASE_URL = 'https://tyrqelewszgzegdcpkew.supabase.co';       // нап
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5cnFlbGV3c3pnemVnZGNwa2V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwMzE1NjgsImV4cCI6MjExMDYwNzU2OH0.64rxeVxn-e-umfBYU95E7SfaIgY8T6cD0n8k17UZ3rM';  // ключ "anon public" (НЕ service_role!)
 /* ================================================================================ */
 
-const T={req:'zk_requests',pub:'zk_requests_public',sup:'zk_suppliers',pos:'zk_positions',grp:'zk_groups',cat:'zk_categories',kit:'zk_kits',kitI:'zk_kit_items',sch:'zk_schedules'};
+const T={req:'zk_requests',pub:'zk_requests_public',sup:'zk_suppliers',pos:'zk_positions',grp:'zk_groups',cat:'zk_categories',kit:'zk_kits',kitI:'zk_kit_items',sch:'zk_schedules',uk:'zk_user_kits'};
 const ST=[{k:'new',t:'Не замовлено'},{k:'invoice',t:'Очікую рахунок'},{k:'pay',t:'Подав на оплату'},{k:'paid',t:'Оплачено'},{k:'got',t:'Отримано'}];
 const CAR=['Нова пошта','Укрпошта','Meest','Делівері','САТ',"Кур'єр постачальника",'Самовивіз','Інше'];
 const UNITS=['шт','уп','компл','пачка','котушка','кг','м','л'];
 const DEPTS=['Керівник локації','ІТО','Склад','Лабораторія','Закупівлі','Бухгалтерія'];
 
 let sb=null,isA=false,email='';
-let D={requests:[],suppliers:[],positions:[],groups:[],cats:[],kits:[],kitItems:[],sch:[]};
+let D={requests:[],suppliers:[],positions:[],groups:[],cats:[],kits:[],kitItems:[],sch:[],ukits:[]};
 const U={tab:'req',group:'all',cat:'all',status:'all',q:'',by:'none',sel:new Set(),sup:null,supF:null,sq:'',loading:true,err:''};
 let ME={name:'',dept:''};
 try{ME={...ME,...JSON.parse(localStorage.getItem('zk-me')||'{}')}}catch(e){}
@@ -295,9 +296,9 @@ const PAYF=['pay_terms','pay_days','pay_due','prepaid_on','paid_on'];
 const hasPay=()=>D.suppliers.some(x=>'pay_terms' in x)||D.requests.some(x=>'pay_terms' in x);
 function updReq(p){p={...p};if(!hasPay())for(const f of PAYF)delete p[f];return sb.from(T.req).update(p)}
 async function loadAll(){
-  U.noAuto=false;
+  U.noAuto=false;U.noUk=false;
   try{
-    const [req,sups,pos,grs,cats,kits,kitIt,sch]=await Promise.all([
+    const [req,sups,pos,grs,cats,kits,kitIt,sch,uks]=await Promise.all([
       q(sb.from(isA?T.req:T.pub).select('*').order('created_at',{ascending:false})),
       q(isA?sb.from(T.sup).select('*').order('name'):sb.from(T.sup).select('id,site')),
       q(isA?sb.from(T.pos).select('*').order('title'):sb.from(T.pos).select('id,sup_id,title,url,unit').order('title')),
@@ -305,8 +306,9 @@ async function loadAll(){
       q(sb.from(T.cat).select('*').order('name')),
       isA?q(sb.from(T.kit).select('*').order('name')).catch(()=>{U.noAuto=true;return []}):Promise.resolve([]),
       isA?q(sb.from(T.kitI).select('*')).catch(()=>{U.noAuto=true;return []}):Promise.resolve([]),
-      isA?q(sb.from(T.sch).select('*').order('created_at')).catch(()=>{U.noAuto=true;return []}):Promise.resolve([])]);
-    D={requests:req||[],suppliers:sups||[],positions:pos||[],groups:grs||[],cats:cats||[],kits:kits||[],kitItems:kitIt||[],sch:sch||[]};U.err='';
+      isA?q(sb.from(T.sch).select('*').order('created_at')).catch(()=>{U.noAuto=true;return []}):Promise.resolve([]),
+      isA?Promise.resolve([]):q(sb.from(T.uk).select('*').order('name')).catch(()=>{U.noUk=true;return []})]);
+    D={requests:req||[],suppliers:sups||[],positions:pos||[],groups:grs||[],cats:cats||[],kits:kits||[],kitItems:kitIt||[],sch:sch||[],ukits:uks||[]};U.err='';
   }catch(e){U.err=e.message||String(e)}
   U.loading=false;
   for(const id of [...U.sel])if(!D.requests.some(r=>r.id===id))U.sel.delete(id);
@@ -445,6 +447,7 @@ function reqView(){
       ${a&&list.length?`<button class="btn" data-selall>${allSel?'Зняти вибір':'Вибрати всі ('+list.length+')'}</button>`:''}
       ${a&&grp(U.group)?`<button class="btn" data-repg="${U.group}">↻ Повторити закупівлю</button><button class="btn" data-savekit="${U.group}">Зберегти як шаблон</button>`:''}
       ${a&&list.length?`<button class="btn" data-export>⬇ Excel</button>`:''}
+      ${!a&&!U.noUk?`<button class="btn" data-mytpl>Мої шаблони${myKits().length?' ('+myKits().length+')':''}</button>`:''}
       <button class="btn pri" data-new>+ Нова заявка</button>
     </div>
     <div class="chips">${supFilter}<button class="chip ${U.status==='all'?'on':''}" data-st="all">Усі <b>${base.length}</b></button>${ST.map(s=>`<button class="chip ${U.status===s.k?'on':''}" data-st="${s.k}" style="--c:var(--c-${s.k})"><i></i>${s.t} <b>${cnt(s.k)}</b></button>`).join('')}${base.filter(isLate).length?`<button class="chip ${U.status==='late'?'on':''}" data-st="late" style="--c:#c2253d"><i></i>Прострочено <b>${base.filter(isLate).length}</b></button>`:''}${a&&base.filter(owes).length?`<button class="chip ${U.status==='owe'?'on':''}" data-st="owe" style="--c:var(--c-invoice)"><i></i>До сплати <b>${base.filter(owes).length}</b></button>`:''}</div>
@@ -754,24 +757,40 @@ function itemHtml(pre){
   </div>`;
 }
 function renumber(){const its=[...document.querySelectorAll('#items .item')];its.forEach((el,i)=>{el.querySelector('.inum').textContent='Позиція '+(i+1);el.querySelector('[data-rmitem]').hidden=its.length<2});const g=$('#f-go');if(g)g.textContent=its.length>1?`Створити заявки (${its.length})`:'Створити заявку'}
+const myKits=()=>D.ukits.filter(k=>norm(k.owner_name)===norm(ME.name));
 function newReq(pre){
-  M={kind:'new'};
+  M={kind:'new',tpl:pre?.tplId||null};
+  const items=pre?.items?.length?pre.items:[pre];
+  const mk=isA||U.noUk?[]:myKits();
   $('#ov').innerHTML=`<div class="ovl center" data-close><form class="panel" id="nrf" novalidate>
-    <h2>Нова заявка</h2>
+    <h2>${M.tpl?'Шаблон «'+esc(D.ukits.find(k=>k.id===M.tpl)?.name||'')+'»':'Нова заявка'}</h2>
+    ${mk.length&&!M.tpl?`<label class="f">Заповнити з мого шаблону<select id="f-tpl"><option value="">— вибрати —</option>${opts(mk.map(k=>[k.id,k.name+' ('+(k.items||[]).length+')']))}</select></label>`:''}
     <div class="two"><label class="f">Ваше ім'я *<input id="f-who" value="${esc(ME.name)}" autocomplete="name"></label>
     <label class="f">Відділ / локація<input id="f-dept" list="depts" value="${esc(ME.dept)}"></label></div>${deptList}
-    <div id="items">${itemHtml(pre)}</div>
+    <div id="items">${items.map(it=>itemHtml(it)).join('')}</div>
     <button type="button" class="btn" data-additem style="margin-top:12px;width:100%">+ Ще позиція</button>
     <label class="f">Для чого / коментар (до всіх позицій)<textarea id="f-n" placeholder="Напр.: для кабінету фізики, до 1 грудня">${esc(pre?.note||'')}</textarea></label>
     <label class="f" style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="f-urg" style="width:20px;height:20px;margin:0;accent-color:var(--acc)"> Терміново</label>
     ${D.cats.length?`<label class="f">Категорія<select id="f-c"><option value="">Не вибрано</option>${opts(D.cats.map(c=>[c.id,c.name]),pre?.cat||(!['all','none'].includes(U.cat)?U.cat:''))}</select></label>`:''}
     ${isA?`<label class="f">Група<select id="f-g"><option value="">Без групи</option>${opts(D.groups.map(g=>[g.id,g.name]),!['all','none'].includes(U.group)?U.group:'')}</select></label>`:''}
     <p class="err" id="f-err"></p>
+    ${!isA&&!U.noUk?`<div class="tplsave"><label class="f">${M.tpl?'Назва шаблону':'Зберегти ці позиції як мій шаблон'}<input id="f-tpln" placeholder="Напр.: Госптовари на кухню" value="${esc(M.tpl?D.ukits.find(k=>k.id===M.tpl)?.name||'':'')}"></label><button type="button" class="btn" data-savetpl>${M.tpl?'Зберегти зміни шаблону':'Зберегти шаблон'}</button></div>`:''}
     <div class="acts"><button class="btn pri" id="f-go">Створити заявку</button><button type="button" class="btn" data-x>Скасувати</button></div>
   </form></div>`;
   renumber();
+  document.querySelectorAll('#items .item').forEach(dupHint);
   (!ME.name?$('#f-who'):pre?$('#items .it-q'):$('#items .cq')).focus();
 }
+function formItems(){return [...document.querySelectorAll('#items .item')].map(it=>({title:it.querySelector('.it-t').value.trim(),url:it.querySelector('.it-u').value.trim(),qty:+it.querySelector('.it-q').value||null,unit:it.querySelector('.it-un').value,sup:it.dataset.sup||null,pos:it.dataset.pos||null}))}
+function myTplBox(){
+  const mk=myKits();M={kind:'mytpl'};
+  $('#ov').innerHTML=`<div class="ovl center" data-close><div class="panel"><h2>Мої шаблони</h2>
+    <p class="sub" style="margin:0">Збережені списки, щоб подавати однакові заявки, наприклад госптовари, в один клік. Створити шаблон: «+ Нова заявка», заповнити позиції і внизу «Зберегти шаблон».</p>
+    ${mk.map(k=>`<div class="cr"><div class="crm"><b>${esc(k.name)}</b><small>${(k.items||[]).map(i=>esc(i.title)+(i.qty?' — '+fq(i.qty)+' '+esc(i.unit||''):'')).slice(0,4).join('; ')}${(k.items||[]).length>4?' …':''}</small></div>
+      <button class="btn sm pri" data-tplgo="${k.id}">Подати заявку</button><button class="btn sm" data-tpledit="${k.id}">Змінити</button><button class="btn sm warn" data-tpldel="${k.id}">Видалити</button></div>`).join('')||'<p class="hint" style="margin:14px 0">Шаблонів ще немає.</p>'}
+    <div class="acts"><button type="button" class="btn pri" data-newtpl>+ Новий шаблон</button><button type="button" class="btn" data-x>Закрити</button></div></div></div>`;
+}
+const kitPre=k=>({items:(k.items||[]).map(i=>({title:i.title,url:i.url||'',qty:i.qty,unit:i.unit,sup:i.sup||null,pos:i.pos||null})),note:k.note||'',cat:k.category_id||null});
 function catalogSearch(inp){
   const s=inp.value.trim().toLowerCase(),box=inp.closest('.item').querySelector('.cres');
   const res=s?D.positions.filter(p=>(p.title+' '+(p.url||'')+' '+(sup(p.sup_id)?.name||'')).toLowerCase().includes(s)).slice(0,8):[];
@@ -877,6 +896,23 @@ document.addEventListener('click',e=>{
   if(el=c('[data-copyord]')){const t=orderText((el.dataset.ids||'').split(',').filter(Boolean));try{navigator.clipboard.writeText(t).then(()=>toast('Замовлення скопійовано, вставте у Viber чи пошту'),()=>showText(t))}catch(e2){showText(t)}return}
   if(c('[data-export]')){toast('Готую файл…');exportXlsx(U.vis||[]).catch(e2=>toast('Помилка: '+(e2.message||e2)));return}
   if(c('[data-binv]')){invBox();return}
+  if(c('[data-mytpl]')){if(!ME.name){toast("Спершу вкажіть своє ім'я");return}myTplBox();return}
+  if(c('[data-newtpl]')){closeOv();newReq();setTimeout(()=>{const x=$('#f-tpln');if(x){x.scrollIntoView({block:'center'});}},0);return}
+  if(el=c('[data-tplgo]')){const k=D.ukits.find(x=>x.id===el.dataset.tplgo);closeOv();newReq(kitPre(k));return}
+  if(el=c('[data-tpledit]')){const k=D.ukits.find(x=>x.id===el.dataset.tpledit);closeOv();newReq({...kitPre(k),tplId:k.id});return}
+  if(el=c('[data-tpldel]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно?';return}const id=el.dataset.tpldel;closeOv();act(()=>q(sb.from(T.uk).delete().eq('id',id)),'Шаблон видалено');return}
+  if(el=c('[data-savetpl]')){
+    const who=val('f-who'),name=val('f-tpln'),err=$('#f-err');
+    if(!who){err.textContent="Вкажіть своє ім'я.";return}
+    if(!name){err.textContent='Вкажіть назву шаблону.';$('#f-tpln').focus();return}
+    const its=formItems().filter(i=>i.title);
+    if(!its.length){err.textContent='Додайте хоча б одну позицію з назвою.';return}
+    const bad=its.findIndex(i=>i.url&&!/^https?:\/\/\S+\.\S+/.test(i.url));if(bad>=0){err.textContent=`Позиція ${bad+1}: посилання має починатися з https://`;return}
+    ME={name:who,dept:val('f-dept')};saveMe();
+    const row={owner_name:who,owner_dept:ME.dept,name,note:val('f-n'),category_id:val('f-c')||null,items:its.map(i=>({title:i.title,url:i.url||null,qty:i.qty,unit:i.unit,sup:i.sup,pos:i.pos})),updated_at:nowIso()};
+    el.disabled=true;
+    (M.tpl?q(sb.from(T.uk).update(row).eq('id',M.tpl)):q(sb.from(T.uk).insert(row))).then(()=>{toast(M.tpl?'Шаблон оновлено':`Шаблон «${name}» збережено`);closeOv();loadAll()},e2=>{err.textContent='Не вдалося зберегти: '+(e2.message||e2);el.disabled=false});
+    return}
   if(el=c('[data-calmode]')){U.calMode=el.dataset.calmode;U.calD=null;render();return}
   if(el=c('[data-paidnow]')){const id=el.dataset.paidnow;el.disabled=true;act(()=>q(updReq({paid_on:today()}).eq('id',id)),'Позначено сплаченим');return}
   if(el=c('[data-calm]')){const v=+el.dataset.calm;if(!v){U.calM=null;U.calD=null}else{const [y,m]=(U.calM||today().slice(0,7)).split('-').map(Number);const d=new Date(y,m-1+v,1,12);U.calM=ld(d).slice(0,7)}render();return}
@@ -912,6 +948,7 @@ document.addEventListener('change',e=>{
   if(t.dataset.aggst&&t.value){const ids=U.agg[+t.dataset.aggst]||[],k=t.value,rs=D.requests.filter(r=>ids.includes(r.id));act(async()=>{const n=await setStatus(rs,k);toast(`${n} заявок → «${stT(k)}»`)});return}
   if(t.dataset.pdue){const id=t.dataset.pdue,v=t.value||null;act(()=>q(updReq({pay_due:v}).eq('id',id)),'Дату оплати змінено');return}
   if(t.dataset.eta!==undefined&&t.type==='date'){const id=t.dataset.eta,v=t.value||null;act(()=>q(updReq({eta:v}).eq('id',id)),v?'Дату очікування змінено':'Дату прибрано');return}
+  if(t.id==='f-tpl'&&t.value){const k=D.ukits.find(x=>x.id===t.value);const who=val('f-who'),dp=val('f-dept');newReq(kitPre(k));$('#f-who').value=who;$('#f-dept').value=dp;return}
   if(t.classList.contains('it-un')){dupHint(t.closest('.item'));return}
   if(t.dataset.kname){const v=t.value.trim();if(!v)return;act(()=>q(sb.from(T.kit).update({name:v}).eq('id',t.dataset.kname)),'Назву змінено');return}
   if(t.dataset.kiq){const v=+t.value;if(!(v>0)){toast('Кількість має бути більшою за 0');return}act(()=>q(sb.from(T.kitI).update({qty:v}).eq('id',t.dataset.kiq)),'Кількість у шаблоні змінено');return}
