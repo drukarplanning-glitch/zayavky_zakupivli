@@ -291,7 +291,11 @@ function toast(m){let el=$('.toast');if(!el){el=document.createElement('div');el
 
 /* ---------- база ---------- */
 async function q(p){const r=await p;if(r.error)throw r.error;return r.data}
+const PAYF=['pay_terms','pay_days','pay_due','prepaid_on','paid_on'];
+const hasPay=()=>D.suppliers.some(x=>'pay_terms' in x)||D.requests.some(x=>'pay_terms' in x);
+function updReq(p){p={...p};if(!hasPay())for(const f of PAYF)delete p[f];return sb.from(T.req).update(p)}
 async function loadAll(){
+  U.noAuto=false;
   try{
     const [req,sups,pos,grs,cats,kits,kitIt,sch]=await Promise.all([
       q(sb.from(isA?T.req:T.pub).select('*').order('created_at',{ascending:false})),
@@ -299,9 +303,9 @@ async function loadAll(){
       q(isA?sb.from(T.pos).select('*').order('title'):sb.from(T.pos).select('id,sup_id,title,url,unit').order('title')),
       isA?q(sb.from(T.grp).select('*').order('created_at')):Promise.resolve([]),
       q(sb.from(T.cat).select('*').order('name')),
-      isA?q(sb.from(T.kit).select('*').order('name')):Promise.resolve([]),
-      isA?q(sb.from(T.kitI).select('*')):Promise.resolve([]),
-      isA?q(sb.from(T.sch).select('*').order('created_at')):Promise.resolve([])]);
+      isA?q(sb.from(T.kit).select('*').order('name')).catch(()=>{U.noAuto=true;return []}):Promise.resolve([]),
+      isA?q(sb.from(T.kitI).select('*')).catch(()=>{U.noAuto=true;return []}):Promise.resolve([]),
+      isA?q(sb.from(T.sch).select('*').order('created_at')).catch(()=>{U.noAuto=true;return []}):Promise.resolve([])]);
     D={requests:req||[],suppliers:sups||[],positions:pos||[],groups:grs||[],cats:cats||[],kits:kits||[],kitItems:kitIt||[],sch:sch||[]};U.err='';
   }catch(e){U.err=e.message||String(e)}
   U.loading=false;
@@ -348,7 +352,7 @@ async function syncPos(src,excl){
 async function setStatus(rs,k){
   rs=rs.filter(r=>r.status!==k);
   if(k!=='new')for(const r of rs)if(!r.sup_id)r.sup_id=D.positions.find(p=>p.id===r.pos_id)?.sup_id||await ensureSup(r.url);
-  await Promise.all(rs.map(r=>q(sb.from(T.req).update({...statusPatch(r,k),sup_id:r.sup_id||null}).eq('id',r.id))));
+  await Promise.all(rs.map(r=>q(updReq({...statusPatch(r,k),sup_id:r.sup_id||null}).eq('id',r.id))));
   if(k!=='new')for(const r of rs)if(r.sup_id||!r.url)await upsertPos(r);
   else for(const r of rs)await syncPos(r,r.id);
   return rs.length;
@@ -537,6 +541,7 @@ function payRow(r){
     <button class="btn sm pri" data-paidnow="${r.id}">Сплачено</button></div>`;
 }
 function payView(){
+  if(!hasPay())return `<main>${modeSw()}<div class="card"><h1>Потрібне оновлення бази</h1><p>Щоб працювали умови й календар оплат, запустіть у Supabase → SQL Editor файл <code>update_payments.sql</code>, потім оновіть сторінку.</p></div></main>`;
   const td=today(),due=D.requests.filter(r=>!r.paid_on&&r.pay_due),late=due.filter(payLate).sort((a,b)=>a.pay_due<b.pay_due?-1:1);
   const noDate=D.requests.filter(r=>!r.paid_on&&!r.pay_due&&effT(r)!=='pre'&&r.status==='got');
   const sum=a=>a.reduce((t,r)=>t+(+r.amount||0),0);
@@ -645,6 +650,7 @@ function tplView(){
       <label class="mini">Категорія<select data-schf="category_id" data-sid="${x.id}"><option value="">—</option>${opts(D.cats.map(c=>[c.id,c.name]),x.category_id||'')}</select></label>
       <label class="mini chkl"><input type="checkbox" data-schf="active" data-sid="${x.id}" ${x.active!==false?'checked':''}> Увімкнено</label>
       <button class="btn sm" data-schrun="${x.id}">Створити зараз</button><button class="btn sm warn" data-schdel="${x.id}">Видалити</button></div>`};
+  if(U.noAuto)return `<main><div class="card"><h1>Потрібне оновлення бази</h1><p>Щоб працювали шаблони і регулярні закупівлі, запустіть у Supabase → SQL Editor файл <code>update_automation.sql</code>, потім оновіть сторінку.</p></div></main>`;
   return `<main>
     <h1>Шаблони</h1>
     <p class="sub">Шаблон — це набір позицій, з якого заявки створюються в один клік, з множником (наприклад, «× 6 ліній»). Щоб створити шаблон, відкрийте групу в «Заявках» і натисніть «Зберегти як шаблон».</p>
@@ -659,10 +665,11 @@ function tplView(){
       <p class="err" id="ns-err"></p><div class="acts"><button class="btn pri">Додати</button></div></form>
   </main>`;
 }
-const paidDate=r=>{if(r.paid_on)return r.paid_on;const h=r.hist||[];const e=h.find(x=>x.s==='paid')||h.find(x=>x.s==='pay')||h.find(x=>x.s==='got');return ld(e?e.t:r.created_at)};
+const realHist=r=>(r.hist||[]).filter(x=>x.by!=='імпорт з таблиці');
+const paidDate=r=>{if(r.paid_on)return r.paid_on;const h=realHist(r);const e=h.find(x=>x.s==='paid')||h.find(x=>x.s==='pay')||h.find(x=>x.s==='got');return e?ld(e.t):null};
 function repView(){
   const mon=U.repM||today().slice(0,7),[y,m]=mon.split('-').map(Number);
-  const inM=D.requests.filter(r=>['pay','paid','got'].includes(r.status)&&paidDate(r).slice(0,7)===mon);
+  const inM=D.requests.filter(r=>['pay','paid','got'].includes(r.status)&&(paidDate(r)||'').slice(0,7)===mon);
   const withSum=inM.filter(r=>+r.amount>0),total=withSum.reduce((t,r)=>t+ +r.amount,0),noSum=inM.length-withSum.length;
   const block=(title,keyFn)=>{const mp=new Map();withSum.forEach(r=>{const k=keyFn(r)||'Не вказано';mp.set(k,(mp.get(k)||0)+ +r.amount)});const arr=[...mp].sort((a,b)=>b[1]-a[1]),mx=arr[0]?.[1]||1;
     return `<section class="rb"><h2 class="ch">${title}</h2>${arr.map(([k,v])=>`<div class="bar2"><span>${esc(k)}</span><i style="width:${Math.max(2,Math.round(v/mx*100))}%"></i><b>${money(v)}</b></div>`).join('')||'<p class="hint">Немає даних.</p>'}</section>`};
@@ -670,7 +677,7 @@ function repView(){
   return `<main><h1>Звіт про витрати</h1>
     <div class="calnav"><button class="btn sm" data-repm="-1" aria-label="Попередній місяць">←</button><b>${name}</b><button class="btn sm" data-repm="1" aria-label="Наступний місяць">→</button></div>
     <div class="kpis"><div class="kpi"><b>${money(total)||'0 грн'}</b>оплачено за місяць</div><div class="kpi"><b>${withSum.length}</b>позицій із сумою</div>${noSum?`<div class="kpi"><b class="late">${noSum}</b>без суми — у звіт не потрапили</div>`:''}</div>
-    <p class="hint" style="margin:0 0 6px">Рахуються заявки зі статусом «Подав на оплату», «Оплачено» чи «Отримано», за датою оплати.</p>
+    <p class="hint" style="margin:0 0 6px">Рахуються заявки зі статусом «Подав на оплату», «Оплачено» чи «Отримано», за датою, коли статус поставили на сайті, або за датою «Сплачено повністю». Статуси, перенесені імпортом з таблиці, не рахуються.</p>
     <div class="rgrid">${block('За категоріями',r=>cat(r.category_id)?.name)}${block('За постачальниками',r=>sup(r.sup_id)?.name)}${block('За групами',r=>grp(r.group_id)?.name)}${block('За відділами / локаціями',r=>r.author_dept)}</div>
   </main>`;
 }
@@ -871,12 +878,12 @@ document.addEventListener('click',e=>{
   if(c('[data-export]')){toast('Готую файл…');exportXlsx(U.vis||[]).catch(e2=>toast('Помилка: '+(e2.message||e2)));return}
   if(c('[data-binv]')){invBox();return}
   if(el=c('[data-calmode]')){U.calMode=el.dataset.calmode;U.calD=null;render();return}
-  if(el=c('[data-paidnow]')){const id=el.dataset.paidnow;el.disabled=true;act(()=>q(sb.from(T.req).update({paid_on:today()}).eq('id',id)),'Позначено сплаченим');return}
+  if(el=c('[data-paidnow]')){const id=el.dataset.paidnow;el.disabled=true;act(()=>q(updReq({paid_on:today()}).eq('id',id)),'Позначено сплаченим');return}
   if(el=c('[data-calm]')){const v=+el.dataset.calm;if(!v){U.calM=null;U.calD=null}else{const [y,m]=(U.calM||today().slice(0,7)).split('-').map(Number);const d=new Date(y,m-1+v,1,12);U.calM=ld(d).slice(0,7)}render();return}
   if(el=c('[data-day]')){U.calD=el.dataset.day;render();return}
   if(el=c('[data-got]')){const r=D.requests.find(x=>x.id===el.dataset.got);el.disabled=true;act(()=>setStatus([r],'got'),`«${r.title}» отримано`);return}
   if(el=c('[data-gotday]')){const rs=D.requests.filter(r=>r.eta===el.dataset.gotday&&r.status!=='got');el.disabled=true;act(async()=>{const n=await setStatus(rs,'got');toast(`Отримано: ${n}`)});return}
-  if(el=c('[data-tom]')){const id=el.dataset.tom;act(()=>q(sb.from(T.req).update({eta:addDays(today(),1)}).eq('id',id)),'Перенесено на завтра');return}
+  if(el=c('[data-tom]')){const id=el.dataset.tom;act(()=>q(updReq({eta:addDays(today(),1)}).eq('id',id)),'Перенесено на завтра');return}
   if(c('[data-selall]')){const ids=U.vis||[],all=ids.length&&ids.every(id=>U.sel.has(id));ids.forEach(id=>all?U.sel.delete(id):U.sel.add(id));render();return}
   if(el=c('[data-rep]')){const r=D.requests.find(x=>x.id===el.dataset.rep);if(!r)return;closeOv();newReq({title:r.title,url:r.url||'',sup:r.sup_id,unit:r.unit,pos:r.pos_id,qty:r.qty,note:r.note,cat:r.category_id});return}
   if(el=c('[data-repg]')){repeatBox(el.dataset.repg);return}
@@ -903,24 +910,24 @@ document.addEventListener('change',e=>{
   if(t.id==='by'){U.by=t.value;render();return}
   if(t.dataset.ck){t.checked?U.sel.add(t.dataset.ck):U.sel.delete(t.dataset.ck);render();return}
   if(t.dataset.aggst&&t.value){const ids=U.agg[+t.dataset.aggst]||[],k=t.value,rs=D.requests.filter(r=>ids.includes(r.id));act(async()=>{const n=await setStatus(rs,k);toast(`${n} заявок → «${stT(k)}»`)});return}
-  if(t.dataset.pdue){const id=t.dataset.pdue,v=t.value||null;act(()=>q(sb.from(T.req).update({pay_due:v}).eq('id',id)),'Дату оплати змінено');return}
-  if(t.dataset.eta!==undefined&&t.type==='date'){const id=t.dataset.eta,v=t.value||null;act(()=>q(sb.from(T.req).update({eta:v}).eq('id',id)),v?'Дату очікування змінено':'Дату прибрано');return}
+  if(t.dataset.pdue){const id=t.dataset.pdue,v=t.value||null;act(()=>q(updReq({pay_due:v}).eq('id',id)),'Дату оплати змінено');return}
+  if(t.dataset.eta!==undefined&&t.type==='date'){const id=t.dataset.eta,v=t.value||null;act(()=>q(updReq({eta:v}).eq('id',id)),v?'Дату очікування змінено':'Дату прибрано');return}
   if(t.classList.contains('it-un')){dupHint(t.closest('.item'));return}
   if(t.dataset.kname){const v=t.value.trim();if(!v)return;act(()=>q(sb.from(T.kit).update({name:v}).eq('id',t.dataset.kname)),'Назву змінено');return}
   if(t.dataset.kiq){const v=+t.value;if(!(v>0)){toast('Кількість має бути більшою за 0');return}act(()=>q(sb.from(T.kitI).update({qty:v}).eq('id',t.dataset.kiq)),'Кількість у шаблоні змінено');return}
   if(t.dataset.schf){const f=t.dataset.schf,id=t.dataset.sid;let v=f==='active'?t.checked:t.value;if(f==='every_days'){v=Math.round(+v);if(!(v>=1&&v<=365)){toast('Вкажіть від 1 до 365 днів');return}}if(f==='next_date'&&!v){toast('Вкажіть дату');return}if(['kit_id','category_id'].includes(f))v=v||null;act(()=>q(sb.from(T.sch).update({[f]:v}).eq('id',id)),'Збережено');return}
   if(t.dataset.psup){const id=t.dataset.psup,v=t.value||null;act(()=>q(sb.from(T.pos).update({sup_id:v}).eq('id',id)),'Постачальника позиції змінено');return}
   if(t.dataset.rst){const r=D.requests.find(x=>x.id===t.dataset.rst);const k=t.value;act(()=>setStatus([r],k),`«${r.title}» → ${stT(k)}`);return}
-  if(t.id==='bpay'&&t.value){const ids=[...U.sel],v=t.value;U.sel.clear();act(()=>q(sb.from(T.req).update(v==='paidnow'?{paid_on:today()}:{pay_terms:v.slice(2)||null}).in('id',ids)),`Оновлено заявок: ${ids.length}`);return}
+  if(t.id==='bpay'&&t.value){const ids=[...U.sel],v=t.value;U.sel.clear();act(()=>q(updReq(v==='paidnow'?{paid_on:today()}:{pay_terms:v.slice(2)||null}).in('id',ids)),`Оновлено заявок: ${ids.length}`);return}
   if(['bst','bgr','bsp','bct','bet'].includes(t.id)&&t.value){
     const rs=D.requests.filter(r=>U.sel.has(r.id)),ids=rs.map(r=>r.id),v=t.value,kind=t.id;
     U.sel.clear();
     act(async()=>{
       if(kind==='bst')await setStatus(rs,v);
-      if(kind==='bet')await q(sb.from(T.req).update({eta:v}).in('id',ids));
-      if(kind==='bct')await q(sb.from(T.req).update({category_id:v==='__none'?null:v}).in('id',ids));
-      if(kind==='bgr')await q(sb.from(T.req).update({group_id:v==='__none'?null:v}).in('id',ids));
-      if(kind==='bsp'){await q(sb.from(T.req).update({sup_id:v}).in('id',ids));await Promise.all(rs.filter(r=>r.status!=='new').map(r=>upsertPos({...r,sup_id:v})))}
+      if(kind==='bet')await q(updReq({eta:v}).in('id',ids));
+      if(kind==='bct')await q(updReq({category_id:v==='__none'?null:v}).in('id',ids));
+      if(kind==='bgr')await q(updReq({group_id:v==='__none'?null:v}).in('id',ids));
+      if(kind==='bsp'){await q(updReq({sup_id:v}).in('id',ids));await Promise.all(rs.filter(r=>r.status!=='new').map(r=>upsertPos({...r,sup_id:v})))}
     },`Оновлено заявок: ${rs.length}`);return}
   if(t.dataset.sf&&['pay_days','prepay_pct'].includes(t.dataset.sf)){const v=Math.round(+t.value),mx=t.dataset.sf==='pay_days'?365:100;if(!(v>=0&&v<=mx)){toast(`Вкажіть від 0 до ${mx}`);return}const id=U.sup;act(()=>q(sb.from(T.sup).update({[t.dataset.sf]:v}).eq('id',id)),'Збережено');return}
   if(t.dataset.sf){let v=t.value.trim();if(t.dataset.sf==='site')v=v.replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/.*$/,'');const id=U.sup;act(()=>q(sb.from(T.sup).update({[t.dataset.sf]:v}).eq('id',id)),'Збережено')}
@@ -971,7 +978,7 @@ document.addEventListener('submit',async e=>{
     let left=sum;
     const patches=rs.map((r,i)=>{const p={};if(n)p.inv=n;if(due)p.pay_due=due;if(sum!=null){const a=i===rs.length-1?Math.round(left*100)/100:Math.round(sum*w[i]/W*100)/100;left-=a;p.amount=a}if(st&&st!==r.status)Object.assign(p,statusPatch(r,st));return p});
     $('#iv-go').disabled=true;
-    try{await Promise.all(rs.map((r,i)=>q(sb.from(T.req).update(patches[i]).eq('id',r.id))));for(const [i,r] of rs.entries()){const nn={...r,...patches[i]};if(nn.status!=='new'&&(nn.sup_id||!nn.url))await upsertPos(nn)}}
+    try{await Promise.all(rs.map((r,i)=>q(updReq(patches[i]).eq('id',r.id))));for(const [i,r] of rs.entries()){const nn={...r,...patches[i]};if(nn.status!=='new'&&(nn.sup_id||!nn.url))await upsertPos(nn)}}
     catch(e2){$('#iv-err').textContent='Не вдалося: '+(e2.message||e2);$('#iv-go').disabled=false;return}
     U.sel.clear();closeOv();toast(`Рахунок застосовано до ${rs.length} заявок`);loadAll();return}
   if(f.id==='rpf'){
@@ -1017,7 +1024,7 @@ document.addEventListener('submit',async e=>{
     const btn=f.querySelector('.btn.pri');btn.disabled=true;$('#e-err').textContent='';
     try{
       if((patch.status||r.status)!=='new'&&!patch.sup_id)patch.sup_id=D.positions.find(p=>p.id===r.pos_id)?.sup_id||await ensureSup(patch.url);
-      await q(sb.from(T.req).update(patch).eq('id',r.id));
+      await q(updReq(patch).eq('id',r.id));
       const n={...r,...patch};if(n.status!=='new'&&(n.sup_id||!n.url))await upsertPos(n);
       if(n.status==='new'||n.url!==r.url)await syncPos(r,r.id);
     }catch(err){$('#e-err').textContent='Не вдалося зберегти: '+(err.message||err);btn.disabled=false;return}
@@ -1031,7 +1038,7 @@ document.addEventListener('dragover',e=>{const d=e.target.closest&&e.target.clos
 document.addEventListener('drop',e=>{const d=e.target.closest&&e.target.closest('[data-drop]');if(!d||!drag.length)return;e.preventDefault();const [kind,raw]=d.dataset.drop.split(':');const v=raw==='none'?null:raw,f=kind==='c'?'category_id':'group_id';const ids=drag.slice(),n=ids.length;drag=[];U.sel.clear();
   D.requests.forEach(r=>{if(ids.includes(r.id))r[f]=v});render();
   const nm=kind==='c'?cat(v)?.name:grp(v)?.name;
-  act(()=>q(sb.from(T.req).update({[f]:v}).in('id',ids)),v?`Переміщено в «${nm}»: ${n}`:(kind==='c'?`Прибрано категорію: ${n}`:`Прибрано з групи: ${n}`))});
+  act(()=>q(updReq({[f]:v}).in('id',ids)),v?`Переміщено в «${nm}»: ${n}`:(kind==='c'?`Прибрано категорію: ${n}`:`Прибрано з групи: ${n}`))});
 
 /* ---------- старт ---------- */
 (async()=>{
