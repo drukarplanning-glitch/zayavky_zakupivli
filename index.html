@@ -108,7 +108,10 @@ tr.sec .btn{margin-inline-start:10px}
 .cres small{color:var(--mute)}
 .picked{font-size:14px;margin-top:6px;color:var(--acc)}
 .sups{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:calc(100vh - 110px)}
-.sl{border-inline-end:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.sl{border-inline-end:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:var(--hh,72px);height:calc(100vh - var(--hh,72px));align-self:start}
+.sl .ng{margin:0 0 10px}.sl .ng input{margin:0}
+.sl>input{width:100%}
+.sll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:2px;margin-inline:-4px;padding-inline:4px}
 .sl input{padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);margin-bottom:8px;min-height:44px}
 .si{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;text-align:start;border:0;background:none;padding:10px;border-radius:8px}
 .si.on{background:var(--soft)}
@@ -123,6 +126,39 @@ tr.sec .btn{margin-inline-start:10px}
 .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0 12px}
 .fab{display:none;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--acc);color:var(--accInk);font-size:30px;line-height:1;border:0;box-shadow:0 6px 18px rgb(0 0 0/.25);z-index:6;align-items:center;justify-content:center}
 .mgr{display:none}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:12px;gap:2px}
+.seg button{border:0;background:none;padding:8px 14px;border-radius:7px;font-weight:600;color:var(--mute);min-height:38px}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.cd.pay b{font-size:15px}
+.okp{color:var(--c-got)!important}.duep{color:var(--c-invoice)!important;font-weight:600}
+.due{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:color-mix(in srgb,var(--c-invoice) 12%,var(--bg));border:1px solid color-mix(in srgb,var(--c-invoice) 40%,transparent);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.due>div{flex:1 1 260px}.due small{display:block;color:var(--mute);font-size:13px}
+.dup small{color:var(--c-invoice);font-size:13px;display:block;margin-top:6px}
+.tpl{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}.tpl.on{border-color:var(--acc)}
+.tplh{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}.tplh small{display:block;color:var(--mute);font-size:13px}
+.kq{width:90px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);text-align:right;font-size:15px}
+.mini{display:flex;flex-direction:column;font-size:12px;color:var(--mute);gap:2px}.mini input,.mini select{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:36px;font-size:14px;max-width:180px}
+.mini input[type=number]{width:80px}.chkl{flex-direction:row;align-items:center;gap:6px;font-size:14px;color:var(--ink)}.chkl input{width:18px;height:18px;min-height:0;accent-color:var(--acc)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:4px 32px}
+.bar2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.bar2 span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar2 i{display:block;height:10px;border-radius:5px;background:var(--acc)}.bar2 b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.linkbtn{border:0;background:none;padding:0;font:inherit;cursor:pointer;text-decoration:underline}
+.calwrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;align-items:start}
+.calnav{display:flex;align-items:center;gap:8px;margin-bottom:10px}.calnav b{min-width:150px;text-align:center;font-size:17px;text-transform:capitalize}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cw{font-size:13px;color:var(--mute);text-align:center;padding:2px 0}
+.cd{min-height:64px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--acc) var(--h),var(--bg));padding:6px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;color:var(--ink)}
+.cd .dn{font-size:13px;color:var(--mute)}.cd b{font-size:20px;line-height:1;font-variant-numeric:tabular-nums}.cd small{font-size:12px;color:var(--c-got)}
+.cd.out{opacity:.4}.cd.today{border:2px solid var(--ink)}.cd.on{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 55%,transparent)}
+.cd.late{background:color-mix(in srgb,#e0314f var(--h),var(--bg));border-color:#e0314f}
+.ch{font-size:19px;margin:22px 0 10px;text-transform:none}.calwrap .ch{margin-top:0}
+.ch::first-letter{text-transform:uppercase}
+.cr{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.cr.lt{border-color:color-mix(in srgb,#e0314f 55%,transparent)}
+.crm{flex:1 1 220px}.crm small{display:block;color:var(--mute);font-size:13px}
+.cr input[type=date]{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);min-height:36px}
+@media(max-width:900px){.calwrap{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.cd{min-height:48px;padding:4px}.cd b{font-size:16px}.calnav b{min-width:0;flex:1}}
 .rpl{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:52vh;overflow:auto}
 .rpi{display:grid;grid-template-columns:auto minmax(0,1fr) 90px auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .rpi input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc)}
@@ -148,6 +184,7 @@ footer{padding:16px max(3vw,16px);font-size:13px;color:var(--mute);border-top:1p
  .gl .g{flex:none;width:auto;border:1px solid var(--line);border-radius:99px;min-height:40px;padding:6px 12px}
  .gl .g .x{opacity:1}
  .sll .si{flex:none;max-width:240px;border:1px solid var(--line)}
+ .sl{position:static;height:auto}.sll{flex-direction:row;overflow-y:hidden;margin:0;padding-inline:0}
  .side .hint{display:none}
  .mgr{display:inline-flex;margin-top:10px}
  .side:not(.edit) .ng{display:none}
@@ -156,7 +193,7 @@ footer{padding:16px max(3vw,16px);font-size:13px;color:var(--mute);border-top:1p
 @media(max-width:600px){
  header{padding:10px 14px;gap:6px 10px}
  .logo{font-size:18px}
- .tabs{order:3;width:100%}.tab{flex:1}
+ .tabs{order:3;width:100%;overflow-x:auto;scrollbar-width:none}.tab{flex:1 0 auto;padding:10px 8px;font-size:15px}
  .who{width:auto;margin-inline-start:auto;font-size:13px;line-height:1.3}.who .em,.who .lg{display:none}.who .btn{flex:none}
  main{padding:16px 14px 96px}
  h1{font-size:26px}
@@ -206,14 +243,14 @@ const SUPABASE_URL = 'https://tyrqelewszgzegdcpkew.supabase.co';       // нап
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5cnFlbGV3c3pnemVnZGNwa2V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwMzE1NjgsImV4cCI6MjExMDYwNzU2OH0.64rxeVxn-e-umfBYU95E7SfaIgY8T6cD0n8k17UZ3rM';  // ключ "anon public" (НЕ service_role!)
 /* ================================================================================ */
 
-const T={req:'zk_requests',pub:'zk_requests_public',sup:'zk_suppliers',pos:'zk_positions',grp:'zk_groups',cat:'zk_categories'};
+const T={req:'zk_requests',pub:'zk_requests_public',sup:'zk_suppliers',pos:'zk_positions',grp:'zk_groups',cat:'zk_categories',kit:'zk_kits',kitI:'zk_kit_items',sch:'zk_schedules'};
 const ST=[{k:'new',t:'Не замовлено'},{k:'invoice',t:'Очікую рахунок'},{k:'pay',t:'Подав на оплату'},{k:'paid',t:'Оплачено'},{k:'got',t:'Отримано'}];
 const CAR=['Нова пошта','Укрпошта','Meest','Делівері','САТ',"Кур'єр постачальника",'Самовивіз','Інше'];
 const UNITS=['шт','уп','компл','пачка','котушка','кг','м','л'];
 const DEPTS=['Керівник локації','ІТО','Склад','Лабораторія','Закупівлі','Бухгалтерія'];
 
 let sb=null,isA=false,email='';
-let D={requests:[],suppliers:[],positions:[],groups:[],cats:[]};
+let D={requests:[],suppliers:[],positions:[],groups:[],cats:[],kits:[],kitItems:[],sch:[]};
 const U={tab:'req',group:'all',cat:'all',status:'all',q:'',by:'none',sel:new Set(),sup:null,supF:null,sq:'',loading:true,err:''};
 let ME={name:'',dept:''};
 try{ME={...ME,...JSON.parse(localStorage.getItem('zk-me')||'{}')}}catch(e){}
@@ -233,7 +270,15 @@ const money=n=>n==null||n===''?'':Number(n).toLocaleString('uk-UA',{maximumFract
 const opts=(arr,cur)=>arr.map(([v,t])=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(t)}</option>`).join('');
 const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
 const nowIso=()=>new Date().toISOString();
-const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const ld=t=>{const d=new Date(t);return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const today=()=>ld(Date.now());
+const addDays=(ds,n)=>{const d=new Date(ds+'T12:00:00');d.setDate(d.getDate()+n);return ld(d)};
+const dayDiff=(a,b)=>Math.round((Date.parse(b+'T12:00:00')-Date.parse(a+'T12:00:00'))/864e5);
+function leadDays(supId,from){
+  if(!supId)return null;
+  const xs=D.requests.filter(r=>r.sup_id===supId&&r.status==='got').map(r=>{const h=r.hist||[];const a=h.find(x=>x.s===from),b=[...h].reverse().find(x=>x.s==='got');return a&&b?dayDiff(ld(a.t),ld(b.t)):null}).filter(x=>x!=null&&x>=0&&x<120).sort((x,y)=>x-y);
+  return xs.length?xs[Math.floor(xs.length/2)]:null;
+}
 const fEta=e=>{const p=String(e).split('-');return p[2]+'.'+p[1]};
 const isLate=r=>!!r.eta&&r.status!=='got'&&r.eta<today();
 const fq=n=>Number(n).toLocaleString('uk-UA',{maximumFractionDigits:2});
@@ -248,20 +293,34 @@ function toast(m){let el=$('.toast');if(!el){el=document.createElement('div');el
 async function q(p){const r=await p;if(r.error)throw r.error;return r.data}
 async function loadAll(){
   try{
-    const [req,sups,pos,grs,cats]=await Promise.all([
+    const [req,sups,pos,grs,cats,kits,kitIt,sch]=await Promise.all([
       q(sb.from(isA?T.req:T.pub).select('*').order('created_at',{ascending:false})),
       q(isA?sb.from(T.sup).select('*').order('name'):sb.from(T.sup).select('id,site')),
       q(isA?sb.from(T.pos).select('*').order('title'):sb.from(T.pos).select('id,sup_id,title,url,unit').order('title')),
       isA?q(sb.from(T.grp).select('*').order('created_at')):Promise.resolve([]),
-      q(sb.from(T.cat).select('*').order('name'))]);
-    D={requests:req||[],suppliers:sups||[],positions:pos||[],groups:grs||[],cats:cats||[]};U.err='';
+      q(sb.from(T.cat).select('*').order('name')),
+      isA?q(sb.from(T.kit).select('*').order('name')):Promise.resolve([]),
+      isA?q(sb.from(T.kitI).select('*')):Promise.resolve([]),
+      isA?q(sb.from(T.sch).select('*').order('created_at')):Promise.resolve([])]);
+    D={requests:req||[],suppliers:sups||[],positions:pos||[],groups:grs||[],cats:cats||[],kits:kits||[],kitItems:kitIt||[],sch:sch||[]};U.err='';
   }catch(e){U.err=e.message||String(e)}
   U.loading=false;
   for(const id of [...U.sel])if(!D.requests.some(r=>r.id===id))U.sel.delete(id);
   render();
 }
 async function act(fn,msg){try{await fn();if(msg)toast(msg)}catch(e){toast('Помилка: '+(e.message||e))}await loadAll()}
-const statusPatch=(r,k)=>({status:k,hist:[...(r.hist||[]),{t:nowIso(),s:k,by:email}]});
+const PT={pre:'Передоплата',post:'Відстрочка',part:'Частково'};
+const effT=r=>r.pay_terms||sup(r.sup_id)?.pay_terms||'pre';
+const effDays=r=>r.pay_days??sup(r.sup_id)?.pay_days??0;
+const effPct=r=>sup(r.sup_id)?.prepay_pct??50;
+const termsTxt=r=>{const t=effT(r);return t==='post'?`Відстрочка ${effDays(r)} дн.`:t==='part'?`${effPct(r)}% передоплата${effDays(r)?`, решта за ${effDays(r)} дн.`:', решта після отримання'}`:'Передоплата'};
+const owes=r=>!r.paid_on&&(r.pay_due||(effT(r)!=='pre'&&r.status==='got'));
+const payLate=r=>!r.paid_on&&!!r.pay_due&&r.pay_due<today();
+const statusPatch=(r,k,curEta=r.eta)=>{const p={status:k,hist:[...(r.hist||[]),{t:nowIso(),s:k,by:email}]};if(['pay','paid'].includes(k)&&!curEta){const n=leadDays(r.sup_id,k);if(n!=null)p.eta=addDays(today(),Math.max(n,1))}
+  const t=effT(r);
+  if(k==='paid'){if(t==='pre'&&!r.paid_on)p.paid_on=today();if(t==='part'&&!r.prepaid_on)p.prepaid_on=today()}
+  if(k==='got'&&t!=='pre'&&!r.paid_on&&!r.pay_due)p.pay_due=addDays(today(),effDays(r));
+  return p};
 function upsertPos(r){
   if(!r.url){
     const p=r.pos_id?D.positions.find(x=>x.id===r.pos_id):D.positions.find(x=>!x.url&&norm(x.title)===norm(r.title));
@@ -314,10 +373,11 @@ function scoped(){
 }
 function render(){
   const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;
-  $('#tabs').innerHTML=sb&&!U.err?[['req',isA?'Заявки':'Мої заявки'],['sup',isA?'Постачальники':'Каталог']].map(([k,t])=>`<button class="tab" data-tab="${k}" aria-current="${U.tab===k}">${t}</button>`).join(''):'';
+  $('#tabs').innerHTML=sb&&!U.err?[['req',isA?'Заявки':'Мої заявки'],...(isA?[['cal','Доставки']]:[]),['sup',isA?'Постачальники':'Каталог'],...(isA?[['tpl','Шаблони'],['rep','Звіт']]:[])].map(([k,t])=>`<button class="tab" data-tab="${k}" aria-current="${U.tab===k}">${t}</button>`).join(''):'';
   $('#who').innerHTML=!sb?'':isA?`<span class="em">Закупівлі: <b>${esc(email)}</b></span><button class="btn sm" data-logout>Вийти</button>`
     :`${ME.name?`<span>Ви: <b>${esc(ME.name)}</b>${ME.dept?' · '+esc(ME.dept):''}</span><button class="btn sm" data-setme>Змінити</button>`:''}<button class="btn sm" data-login>Вхід<span class="lg"> для закупівель</span></button>`;
-  $('#app').innerHTML=!sb?setupView():U.loading?'<p class="empty">Завантаження…</p>':U.err?errView():U.tab==='req'?(isA||ME.name?reqView():whoView()):isA?supView():catView();
+  $('#app').innerHTML=!sb?setupView():U.loading?'<p class="empty">Завантаження…</p>':U.err?errView():U.tab==='req'?(isA||ME.name?reqView():whoView()):U.tab==='cal'&&isA?(U.calMode==='pay'?payView():calView()):U.tab==='tpl'&&isA?tplView():U.tab==='rep'&&isA?repView():isA?supView():catView();
+  {const h=document.querySelector('header');if(h)document.documentElement.style.setProperty('--hh',h.offsetHeight+'px')}
   if(id){const el=document.getElementById(id);if(el&&el!==a&&el.tagName==='INPUT'){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
 function setupView(){return `<div class="card"><h1>Потрібне налаштування</h1><p>Відкрийте <code>index.html</code> і вставте вгорі скрипта <code>SUPABASE_URL</code> та <code>SUPABASE_ANON_KEY</code> (Supabase → Project Settings → API).</p></div>`}
@@ -330,7 +390,7 @@ function whoView(){return `<form class="card" id="whof"><h1>Хто ви?</h1><p 
 
 function reqView(){
   const a=isA,base=scoped();
-  const list=U.status==='all'?base:base.filter(r=>r.status===U.status);
+  const list=U.status==='all'?base:U.status==='late'?base.filter(isLate):U.status==='owe'?base.filter(owes):base.filter(r=>r.status===U.status);
   const cnt=k=>base.filter(r=>r.status===k).length;
   const side=a?`<aside class="side ${U.mgr?'edit':''}">
     <h3>Групи</h3><div class="gl">
@@ -368,20 +428,22 @@ function reqView(){
     if(U.by==='status')keys.sort((x,y)=>ST.findIndex(s=>s.k===x)-ST.findIndex(s=>s.k===y));
     else keys.sort((x,y)=>list.filter(r=>key(r)===y).length-list.filter(r=>key(r)===x).length);
     body=keys.map(k=>{const rs=list.filter(r=>key(r)===k);const nw=rs.filter(r=>r.status==='new').length;
-      return `<tr class="sec"><td colspan="${cols}">${esc(label(k))} · ${rs.length}${a&&U.by==='sup'&&k&&nw?`<button class="btn sm pri" data-orderall="${k}">Замовити ${nw} нових → «Очікую рахунок»</button>`:''}</td></tr>`+rs.map(row).join('')}).join('');
+      return `<tr class="sec"><td colspan="${cols}">${esc(label(k))} · ${rs.length}${a&&U.by==='sup'&&k&&nw?`<button class="btn sm pri" data-orderall="${k}">Замовити ${nw} нових → «Очікую рахунок»</button><button class="btn sm" data-copyord="${k}" data-ids="${rs.filter(r=>r.status==='new').map(r=>r.id).join(',')}">Скопіювати замовлення</button>`:''}</td></tr>`+rs.map(row).join('')}).join('');
   }
   const supFilter=U.supF?`<button class="chip on" data-clrsup>Постачальник: ${esc(sup(U.supF)?.name)} ×</button>`:'';
   return `<div class="wrap ${a?'':'solo'}">${side}<main>
+    ${a?dueBanner():''}
     <h1>${esc(title)}</h1>
-    <p class="sub">${base.length} заявок, у роботі ${open}${base.filter(isLate).length?`, <span class="late">прострочено ${base.filter(isLate).length}</span>`:''}${a?'':'. Тут видно статус і чим їде ваше замовлення.'}</p>
+    <p class="sub">${base.length} заявок, у роботі ${open}${base.filter(isLate).length?`, <button class="linkbtn late" data-st="late">прострочено ${base.filter(isLate).length}</button>`:''}${a?'':'. Тут видно статус і чим їде ваше замовлення.'}</p>
     <div class="bar">
       <input type="search" id="q" placeholder="Пошук: назва, автор, рахунок, ТТН…" value="${esc(U.q)}" aria-label="Пошук">
       <select id="by" aria-label="Групувати">${opts([['none','Без групування'],...(a?[['item','Однакові позиції разом'],['sup','За постачальником']]:[]),['cat','За категорією'],['status','За статусом'],...(a?[['author','За автором']]:[])],U.by)}</select>
       ${a&&list.length?`<button class="btn" data-selall>${allSel?'Зняти вибір':'Вибрати всі ('+list.length+')'}</button>`:''}
-      ${a&&grp(U.group)?`<button class="btn" data-repg="${U.group}">↻ Повторити закупівлю</button>`:''}
+      ${a&&grp(U.group)?`<button class="btn" data-repg="${U.group}">↻ Повторити закупівлю</button><button class="btn" data-savekit="${U.group}">Зберегти як шаблон</button>`:''}
+      ${a&&list.length?`<button class="btn" data-export>⬇ Excel</button>`:''}
       <button class="btn pri" data-new>+ Нова заявка</button>
     </div>
-    <div class="chips">${supFilter}<button class="chip ${U.status==='all'?'on':''}" data-st="all">Усі <b>${base.length}</b></button>${ST.map(s=>`<button class="chip ${U.status===s.k?'on':''}" data-st="${s.k}" style="--c:var(--c-${s.k})"><i></i>${s.t} <b>${cnt(s.k)}</b></button>`).join('')}</div>
+    <div class="chips">${supFilter}<button class="chip ${U.status==='all'?'on':''}" data-st="all">Усі <b>${base.length}</b></button>${ST.map(s=>`<button class="chip ${U.status===s.k?'on':''}" data-st="${s.k}" style="--c:var(--c-${s.k})"><i></i>${s.t} <b>${cnt(s.k)}</b></button>`).join('')}${base.filter(isLate).length?`<button class="chip ${U.status==='late'?'on':''}" data-st="late" style="--c:#c2253d"><i></i>Прострочено <b>${base.filter(isLate).length}</b></button>`:''}${a&&base.filter(owes).length?`<button class="chip ${U.status==='owe'?'on':''}" data-st="owe" style="--c:var(--c-invoice)"><i></i>До сплати <b>${base.filter(owes).length}</b></button>`:''}</div>
     ${a&&U.sel.size?bulk():''}
     <table class="stack"><thead><tr>${head.map((h,i)=>a&&i===0?`<th class="ck"><input type="checkbox" data-selall ${allSel?'checked':''} aria-label="Вибрати всі"></th>`:`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>
     <button class="fab" data-new aria-label="Нова заявка">+</button>
@@ -394,6 +456,8 @@ function bulk(){
   <select id="bct" aria-label="Категорія для вибраних"><option value="">Категорія…</option><option value="__none">Прибрати категорію</option>${opts(D.cats.map(c=>[c.id,c.name]))}</select>
   <label style="display:flex;align-items:center;gap:6px">Очікується <input type="date" id="bet" style="padding:6px 8px;border-radius:6px;border:0;background:var(--bg);color:var(--ink);min-height:36px"></label>
   <select id="bsp" aria-label="Постачальник для вибраних"><option value="">Постачальник…</option>${opts(D.suppliers.map(s=>[s.id,s.name]))}</select>
+  <select id="bpay" aria-label="Оплата для вибраних"><option value="">Оплата…</option><option value="paidnow">Сплачено сьогодні</option><option value="t:pre">Умови: передоплата</option><option value="t:post">Умови: відстрочка</option><option value="t:part">Умови: частково</option><option value="t:">Умови: як у постачальника</option></select>
+  <button class="btn sm" data-binv>Рахунок…</button>
   <button class="btn sm" data-clrsel>Зняти вибір</button></div>`;
 }
 function row(r){
@@ -403,45 +467,50 @@ function row(r){
   const ship=r.car?`${esc(r.car)}${r.ttn?`, ТТН ${esc(r.ttn)}`:''}`:'';
   if(!isA)return `<tr data-id="${r.id}">${pos}${qty}<td><span class="st s-${r.status}">${stT(r.status)}</span></td><td>${ship}${etaHtml(r)}</td><td class="num">${dt(r.created_at)}</td><td><button class="btn sm" data-rep="${r.id}">↻ Повторити</button></td></tr>`;
   const docs=[r.inv&&`Рах. ${esc(r.inv)}`,r.amount&&money(r.amount),r.vn&&`ВН ${esc(r.vn)}`].filter(Boolean).join(' · ');
+  const tt=effT(r),payb=r.paid_on&&(tt!=='pre'||r.pay_due)?`<small class="okp">Сплачено ${fEta(r.paid_on)}</small>`:r.pay_due&&!r.paid_on?`<small class="${payLate(r)?'late':'duep'}">Сплатити до ${fEta(r.pay_due)}${payLate(r)?' · прострочено':''}</small>`:tt!=='pre'&&r.status!=='got'?`<small>${esc(termsTxt(r))}${tt==='part'&&r.prepaid_on?' · передоплату внесено':''}</small>`:'';
   return `<tr data-id="${r.id}" draggable="true" class="${sel?'sel':''}">
     <td class="ck"><input type="checkbox" data-ck="${r.id}" ${sel?'checked':''} aria-label="Вибрати"></td>${pos}${qty}
     <td>${esc(r.author_name)}<small>${esc(r.author_dept)}</small></td>
     <td>${g?`<span class="gp">${esc(g.name)}</span>`:''}${ct?` <span class="cp">${esc(ct.name)}</span>`:''}</td>
     <td>${esc(s?.name||'')}</td>
     <td><select class="st s-${r.status}" data-rst="${r.id}" aria-label="Статус">${opts(ST.map(x=>[x.k,x.t]),r.status)}</select></td>
-    <td>${docs?`<small style="color:var(--ink)">${docs}</small>`:''}${ship?`<small>${ship}</small>`:''}${etaHtml(r)}</td>
+    <td>${docs?`<small style="color:var(--ink)">${docs}</small>`:''}${ship?`<small>${ship}</small>`:''}${etaHtml(r)}${payb}</td>
     <td class="num">${dt(r.created_at)}</td></tr>`;
 }
 
 function supView(){
   const a=isA;
   const openOf=id=>D.requests.filter(r=>r.sup_id===id&&r.status==='new');
-  let list=D.suppliers.slice().sort((x,y)=>(a?openOf(y.id).length-openOf(x.id).length:0)||x.name.localeCompare(y.name,'uk'));
+  let list=D.suppliers.slice().sort((x,y)=>(a?openOf(y.id).length-openOf(x.id).length:0)||x.name.localeCompare(y.name,'uk',{numeric:true}));
   if(U.sq){const s=U.sq.toLowerCase();list=list.filter(x=>(x.name+' '+(x.site||'')+' '+D.positions.filter(p=>p.sup_id===x.id).map(p=>p.title).join(' ')).toLowerCase().includes(s))}
   const noSup=a?D.positions.filter(p=>!p.sup_id).length:0;
   if(!U.sup||(!sup(U.sup)&&!(U.sup==='__none'&&noSup)))U.sup=list[0]?.id||(noSup?'__none':null);
   const s=U.sup==='__none'?{id:'__none',name:'Позиції без постачальника',site:''}:sup(U.sup);
-  const left=`<aside class="sl"><input type="search" id="sq" placeholder="Пошук постачальника або товару" value="${esc(U.sq)}" aria-label="Пошук постачальника"><div class="sll">
+  const left=`<aside class="sl"><input type="search" id="sq" placeholder="Пошук постачальника або товару" value="${esc(U.sq)}" aria-label="Пошук постачальника">${a?`<form class="ng" id="nsf"><input id="nsn" placeholder="Новий постачальник" aria-label="Назва постачальника"><button class="btn sm pri">+</button></form>`:''}<div class="sll">
     ${list.map(x=>{const n=a?openOf(x.id).length:0;return `<button class="si ${x.id===U.sup?'on':''}" data-sup="${x.id}"><b>${esc(x.name)}</b>${n?`<em title="Чекають замовлення">${n}</em>`:''}<small>${D.positions.filter(p=>p.sup_id===x.id).length} позицій${x.site?' · '+esc(x.site):''}</small></button>`}).join('')||'<p class="hint">Постачальників ще немає.</p>'}
-    ${noSup?`<button class="si ${U.sup==='__none'?'on':''}" data-sup="__none"><b>Без постачальника</b><small>${noSup} позицій</small></button>`:''}</div>${a?`<form class="ng" id="nsf"><input id="nsn" placeholder="Новий постачальник" aria-label="Назва постачальника"><button class="btn sm pri">+</button></form>`:''}
+    ${noSup?`<button class="si ${U.sup==='__none'?'on':''}" data-sup="__none"><b>Без постачальника</b><small>${noSup} позицій</small></button>`:''}</div>
   </aside>`;
   if(!s)return `<div class="sups">${left}<main><p class="empty">${a?'Додайте першого постачальника ліворуч.':'Каталог поки порожній.'}</p></main></div>`;
   const pos=D.positions.filter(p=>s.id==='__none'?!p.sup_id:p.sup_id===s.id);
   const times=p=>D.requests.filter(r=>((p.url&&r.url===p.url)||r.pos_id===p.id||(!p.url&&!r.url&&!r.pos_id&&norm(r.title)===norm(p.title)))&&r.status!=='new').length;
   const wait=openOf(s.id);
   const rs=D.requests.filter(r=>r.sup_id===s.id);
-  const spent=rs.filter(r=>['paid','got'].includes(r.status)).reduce((t,r)=>t+(+r.amount||0),0);
+  const spent=rs.filter(r=>r.paid_on||(effT(r)==='pre'&&['paid','got'].includes(r.status))).reduce((t,r)=>t+(+r.amount||0),0);
+  const debt=rs.filter(owes).reduce((t,r)=>t+(+r.amount||0),0);
   return `<div class="sups">${left}<main>
     <h1>${esc(s.name)}</h1>
     <p class="sub">${s.site?`<a class="lnk" style="display:inline" href="https://${esc(s.site)}" target="_blank" rel="noopener">${esc(s.site)} ↗</a>`:''}</p>
-    ${a&&s.id!=='__none'?`<div class="kpis"><div class="kpi"><b>${wait.length}</b>чекають замовлення</div><div class="kpi"><b>${rs.filter(r=>['invoice','pay','paid'].includes(r.status)).length}</b>у процесі</div><div class="kpi"><b>${rs.filter(r=>r.status==='got').length}</b>отримано</div><div class="kpi"><b>${money(spent)||'0 грн'}</b>оплачено всього</div></div>
+    ${a&&s.id!=='__none'?`<div class="kpis"><div class="kpi"><b>${wait.length}</b>чекають замовлення</div><div class="kpi"><b>${rs.filter(r=>['invoice','pay','paid'].includes(r.status)).length}</b>у процесі</div><div class="kpi"><b>${rs.filter(r=>r.status==='got').length}</b>отримано</div><div class="kpi"><b>${money(spent)||'0 грн'}</b>оплачено всього</div>${debt?`<div class="kpi"><b class="late">${money(debt)}</b>до сплати</div>`:''}</div>
     ${wait.length?`<div class="wait"><h3>Чекають замовлення: ${wait.length}</h3><ul>${aggregate(wait).map(g=>`<li><b>${esc(g.rs[0].title)}</b> — ${fq(g.tot)} ${esc(g.rs[0].unit)} <small style="color:var(--mute)">(${g.rs.map(r=>`${esc(r.author_name)}: ${fq(r.qty)}`).join(', ')})</small></li>`).join('')}</ul>
-      <div class="acts" style="margin:0"><button class="btn pri" data-orderall="${s.id}">Замовити все → «Очікую рахунок»</button><button class="btn" data-showsup="${s.id}">Відкрити в заявках</button></div></div>`:''}
+      <div class="acts" style="margin:0"><button class="btn pri" data-orderall="${s.id}">Замовити все → «Очікую рахунок»</button><button class="btn" data-copyord="${s.id}" data-ids="${wait.map(r=>r.id).join(',')}">Скопіювати замовлення</button><button class="btn" data-showsup="${s.id}">Відкрити в заявках</button></div></div>`:''}
     <fieldset class="box"><legend>Дані постачальника</legend><div class="meta">
       <label class="f">Назва<input data-sf="name" value="${esc(s.name)}"></label>
       <label class="f">Сайт (домен)<input data-sf="site" value="${esc(s.site)}" placeholder="example.com.ua"></label>
       <label class="f">Контакти<input data-sf="contact" value="${esc(s.contact)}"></label>
-      <label class="f">ЄДРПОУ<input data-sf="edrpou" value="${esc(s.edrpou)}" inputmode="numeric"></label></div>
+      <label class="f">ЄДРПОУ<input data-sf="edrpou" value="${esc(s.edrpou)}" inputmode="numeric"></label>
+      <label class="f">Умови оплати<select data-sf="pay_terms">${opts(Object.entries(PT),s.pay_terms||'pre')}</select></label>
+      <label class="f">Днів відстрочки<input data-sf="pay_days" type="number" min="0" max="365" value="${s.pay_days??0}"></label>
+      ${s.pay_terms==='part'?`<label class="f">% передоплати<input data-sf="prepay_pct" type="number" min="0" max="100" value="${s.prepay_pct??50}"></label>`:''}</div>
       <label class="f">Нотатки<textarea data-sf="note">${esc(s.note)}</textarea></label></fieldset>`:''}
     <h2 style="margin:22px 0 8px;font-size:20px">Позиції, які замовляли (${pos.length})</h2>
     <table class="stack"><thead><tr><th>Позиція</th><th>Од.</th><th class="num">Остання ціна</th>${a?'<th class="num">Замовляли</th><th>Постачальник</th>':''}<th></th></tr></thead><tbody>
@@ -451,6 +520,202 @@ function supView(){
   </main></div>`;
 }
 
+function calRow(r){
+  const s=sup(r.sup_id),late=isLate(r);
+  return `<div class="cr${late?' lt':''}"><div class="crm"><b>${esc(r.title)}</b><small>${esc(fq(r.qty))} ${esc(r.unit)} · ${esc(r.author_name)}${s?' · '+esc(s.name):''}${r.car?' · '+esc(r.car):''}${r.ttn?' '+esc(r.ttn):''}</small></div>
+    <span class="st s-${r.status}">${stT(r.status)}</span>
+    <input type="date" data-eta="${r.id}" value="${esc(r.eta||'')}" aria-label="Дата очікування">
+    ${late?`<button class="btn sm" data-tom="${r.id}">На завтра</button>`:''}
+    <button class="btn sm pri" data-got="${r.id}">Отримано</button></div>`;
+}
+const modeSw=()=>`<div class="seg"><button class="${U.calMode!=='pay'?'on':''}" data-calmode="del">Доставки</button><button class="${U.calMode==='pay'?'on':''}" data-calmode="pay">Оплати</button></div>`;
+function payRow(r){
+  const s=sup(r.sup_id),late=payLate(r);
+  return `<div class="cr${late?' lt':''}"><div class="crm"><b>${esc(r.title)}</b><small>${r.amount?money(r.amount)+' · ':''}${s?esc(s.name)+' · ':''}${r.inv?'рах. '+esc(r.inv)+' · ':''}${esc(termsTxt(r))}</small></div>
+    <span class="st s-${r.status}">${stT(r.status)}</span>
+    <input type="date" data-pdue="${r.id}" value="${esc(r.pay_due||'')}" aria-label="Сплатити до">
+    <button class="btn sm pri" data-paidnow="${r.id}">Сплачено</button></div>`;
+}
+function payView(){
+  const td=today(),due=D.requests.filter(r=>!r.paid_on&&r.pay_due),late=due.filter(payLate).sort((a,b)=>a.pay_due<b.pay_due?-1:1);
+  const noDate=D.requests.filter(r=>!r.paid_on&&!r.pay_due&&effT(r)!=='pre'&&r.status==='got');
+  const sum=a=>a.reduce((t,r)=>t+(+r.amount||0),0);
+  const byDay={},paidBy={};due.forEach(r=>(byDay[r.pay_due]=byDay[r.pay_due]||[]).push(r));
+  D.requests.filter(r=>r.paid_on).forEach(r=>(paidBy[r.paid_on]=paidBy[r.paid_on]||[]).push(r));
+  const mon=U.calM||td.slice(0,7),[y,m]=mon.split('-').map(Number);
+  const first=new Date(y,m-1,1,12),start=new Date(first);start.setDate(1-((first.getDay()+6)%7));
+  const cells=[];for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);cells.push(d)}
+  while(cells.length>35&&cells[cells.length-7].getMonth()!==m-1)cells.splice(-7);
+  const max=Math.max(1,...Object.values(byDay).map(a=>a.length));
+  const sel=U.calD||td,dayList=byDay[sel]||[];
+  const week=due.filter(r=>r.pay_due>=td&&r.pay_due<=addDays(td,6));
+  const mName=first.toLocaleDateString('uk-UA',{month:'long',year:'numeric'});
+  const fd=ds=>new Date(ds+'T12:00:00').toLocaleDateString('uk-UA',{weekday:'long',day:'numeric',month:'long'});
+  const k=v=>v>=1e6?(v/1e6).toFixed(1).replace('.',',')+' млн':v>=1e3?Math.round(v/1e3)+' тис':String(Math.round(v));
+  return `<main>
+    ${modeSw()}
+    <h1>Оплати</h1>
+    <p class="sub">До сплати ${money(sum(due))||'0 грн'} (${due.length})${week.length?`, цього тижня ${money(sum(week))}`:''}${late.length?`, <span class="late">прострочено ${money(sum(late))||late.length+' поз.'}</span>`:''}${noDate.length?`, без дати ${noDate.length}`:''}.</p>
+    <div class="calwrap"><section>
+      <div class="calnav"><button class="btn sm" data-calm="-1" aria-label="Попередній місяць">←</button><b>${mName}</b><button class="btn sm" data-calm="1" aria-label="Наступний місяць">→</button><button class="btn sm" data-calm="0">Сьогодні</button></div>
+      <div class="cal">${['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(d=>`<span class="cw">${d}</span>`).join('')}
+      ${cells.map(d=>{const ds=ld(d),a=byDay[ds]||[],n=a.length,sm=sum(a),g=(paidBy[ds]||[]).length,lt=n&&ds<td;
+        return `<button class="cd pay${d.getMonth()!==m-1?' out':''}${ds===td?' today':''}${lt?' late':''}${ds===sel?' on':''}" data-day="${ds}" style="--h:${n?Math.round(18+67*n/max):0}%" aria-label="${ds}: до сплати ${n}"><span class="dn">${d.getDate()}</span>${n?`<b>${sm?k(sm):n}</b>`:''}${g?`<small>✓${g}</small>`:''}</button>`}).join('')}</div>
+      <p class="hint">Що темніший день, то більше платежів того дня, у клітинці — сума. Червоний — термін оплати минув. ✓ — скільки сплачено того дня.</p>
+    </section><section>
+      <h2 class="ch">${esc(fd(sel))}${sel===td?' · сьогодні':''}</h2>
+      ${dayList.length?`<p class="hint" style="margin:0 0 8px">Разом ${money(sum(dayList))||'—'}</p>${dayList.map(payRow).join('')}`:'<p class="hint">На цей день оплат немає.</p>'}
+    </section></div>
+    ${late.length?`<h2 class="ch late">Прострочені оплати (${late.length})</h2>${late.map(payRow).join('')}`:''}
+    ${noDate.length?`<h2 class="ch">Отримано з відстрочкою, без дати оплати (${noDate.length})</h2>${noDate.map(payRow).join('')}`:''}
+  </main>`;
+}
+function calView(){
+  const td=today(),act=D.requests.filter(r=>r.status!=='got');
+  const withEta=act.filter(r=>r.eta),late=withEta.filter(r=>r.eta<td).sort((a,b)=>a.eta<b.eta?-1:1);
+  const noDate=act.filter(r=>!r.eta&&['invoice','pay','paid'].includes(r.status));
+  const byDay={},gotBy={};
+  withEta.forEach(r=>(byDay[r.eta]=byDay[r.eta]||[]).push(r));
+  D.requests.filter(r=>r.status==='got').forEach(r=>{const h=[...(r.hist||[])].reverse().find(x=>x.s==='got');if(h)(gotBy[ld(h.t)]=gotBy[ld(h.t)]||[]).push(r)});
+  const mon=U.calM||td.slice(0,7),[y,m]=mon.split('-').map(Number);
+  const first=new Date(y,m-1,1,12),start=new Date(first);start.setDate(1-((first.getDay()+6)%7));
+  const cells=[];for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);cells.push(d)}
+  while(cells.length>35&&cells[cells.length-7].getMonth()!==m-1)cells.splice(-7);
+  const max=Math.max(1,...Object.values(byDay).map(a=>a.length));
+  const sel=U.calD||td,dayList=(byDay[sel]||[]).slice().sort((a,b)=>(sup(a.sup_id)?.name||'').localeCompare(sup(b.sup_id)?.name||'','uk')),dayGot=gotBy[sel]||[];
+  const week=[0,1,2,3,4,5,6].map(i=>addDays(td,i)),weekN=week.reduce((t,d)=>t+(byDay[d]||[]).length,0);
+  const mName=first.toLocaleDateString('uk-UA',{month:'long',year:'numeric'});
+  const fd=ds=>new Date(ds+'T12:00:00').toLocaleDateString('uk-UA',{weekday:'long',day:'numeric',month:'long'});
+  return `<main>
+    ${modeSw()}
+    <h1>Доставки</h1>
+    <p class="sub">Очікується ${withEta.length}, з них цього тижня ${weekN}${late.length?`, <span class="late">прострочено ${late.length}</span>`:''}${noDate.length?`, без дати ${noDate.length}`:''}.</p>
+    <div class="calwrap"><section>
+      <div class="calnav"><button class="btn sm" data-calm="-1" aria-label="Попередній місяць">←</button><b>${mName}</b><button class="btn sm" data-calm="1" aria-label="Наступний місяць">→</button><button class="btn sm" data-calm="0">Сьогодні</button></div>
+      <div class="cal">${['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(d=>`<span class="cw">${d}</span>`).join('')}
+      ${cells.map(d=>{const ds=ld(d),n=(byDay[ds]||[]).length,g=(gotBy[ds]||[]).length,lt=n&&ds<td;
+        return `<button class="cd${d.getMonth()!==m-1?' out':''}${ds===td?' today':''}${lt?' late':''}${ds===sel?' on':''}" data-day="${ds}" style="--h:${n?Math.round(18+67*n/max):0}%" aria-label="${ds}: очікується ${n}"><span class="dn">${d.getDate()}</span>${n?`<b>${n}</b>`:''}${g?`<small>✓${g}</small>`:''}</button>`}).join('')}</div>
+      <p class="hint">Що темніший день, то більше позицій має приїхати. Червоний — дата минула, а позицію ще не отримано. ✓ — скільки отримано того дня.</p>
+    </section>
+    <section>
+      <h2 class="ch">${esc(fd(sel))}${sel===td?' · сьогодні':''}</h2>
+      ${dayList.length?`<div class="acts" style="margin:0 0 10px"><button class="btn sm pri" data-gotday="${sel}">Позначити все отриманим (${dayList.length})</button></div>${dayList.map(calRow).join('')}`:`<p class="hint" style="margin:0 0 10px">На цей день нічого не очікується.</p>`}
+      ${dayGot.length?`<p class="hint" style="margin:14px 0 6px">Отримано цього дня: ${dayGot.map(r=>esc(r.title)).join(', ')}</p>`:''}
+    </section></div>
+    ${late.length?`<h2 class="ch late">Прострочено (${late.length})</h2>${late.map(calRow).join('')}`:''}
+    ${noDate.length?`<h2 class="ch">У роботі без дати (${noDate.length})</h2><p class="hint" style="margin:0 0 8px">Поставте дату, щоб позиція з'явилась у календарі.</p>${noDate.map(calRow).join('')}`:''}
+  </main>`;
+}
+/* ---------- шаблони, графік, звіт, автоматизація ---------- */
+const kitItems=id=>D.kitItems.filter(i=>i.kit_id===id).sort((a,b)=>a.sort-b.sort);
+const ddmm=ds=>{const p=String(ds).split('-');return p[2]+'.'+p[1]};
+const author=()=>({author_name:ME.name||'Закупівлі',author_dept:ME.dept||'Закупівлі'});
+const nextAfter=(ds,n)=>{let d=ds;const t=today();while(d<=t)d=addDays(d,n);return d};
+const posOf=r=>r.pos_id?D.positions.find(p=>p.id===r.pos_id):r.url?D.positions.find(p=>p.url===r.url):null;
+async function kitToGroup(kitId,mult,name){
+  const its=kitItems(kitId);if(!its.length)throw new Error('Шаблон порожній');
+  const g=await q(sb.from(T.grp).insert({name}).select().single());
+  const au=author();
+  await q(sb.from(T.req).insert(its.map(i=>({title:i.title,url:i.url||null,pos_id:i.pos_id||null,qty:Math.round(i.qty*mult*100)/100,unit:i.unit,sup_id:i.sup_id||null,category_id:i.category_id||null,note:i.note||'',urgent:false,group_id:g.id,...au}))));
+  return g;
+}
+async function runSchedule(s){
+  const name=`${s.name} ${ddmm(today())}`;
+  const g=s.kit_id&&kitItems(s.kit_id).length?await kitToGroup(s.kit_id,1,name):await q(sb.from(T.grp).insert({name}).select().single());
+  await q(sb.from(T.sch).update({current_group_id:g.id,next_date:nextAfter(s.next_date,s.every_days)}).eq('id',s.id));
+  return g;
+}
+function dueBanner(){
+  const due=D.sch.filter(s=>s.active!==false&&s.next_date<=today());
+  return due.map(s=>`<div class="due"><div><b>Час регулярної закупівлі «${esc(s.name)}»</b><small>За графіком на ${ddmm(s.next_date)}, кожні ${s.every_days} дн.${s.kit_id?' · шаблон «'+esc(D.kits.find(k=>k.id===s.kit_id)?.name||'')+'»':''}</small></div><button class="btn sm pri" data-schrun="${s.id}">Створити групу</button><button class="btn sm" data-schskip="${s.id}">Пропустити до ${ddmm(nextAfter(s.next_date,s.every_days))}</button></div>`).join('');
+}
+function tplView(){
+  const kitRow=k=>{const its=kitItems(k.id),open=U.kit===k.id;
+    return `<div class="tpl${open?' on':''}"><div class="tplh"><div><b>${esc(k.name)}</b><small>${its.length} позицій</small></div><div class="acts" style="margin:0"><button class="btn sm pri" data-kituse="${k.id}">Створити заявки</button><button class="btn sm" data-kitopen="${k.id}">${open?'Згорнути':'Редагувати'}</button></div></div>
+    ${open?`<label class="f">Назва шаблону<input data-kname="${k.id}" value="${esc(k.name)}"></label>
+      <table class="stack" style="margin-top:10px"><thead><tr><th>Позиція</th><th class="num">К-сть</th><th>Од.</th><th>Постачальник</th><th></th></tr></thead><tbody>
+      ${its.map(i=>`<tr><td class="nm"><b>${esc(i.title)}</b>${i.note?`<small>${esc(i.note)}</small>`:''}</td><td class="num"><input class="kq" type="number" min="0.01" step="any" data-kiq="${i.id}" value="${esc(i.qty)}" aria-label="Кількість"></td><td>${esc(i.unit)}</td><td>${esc(sup(i.sup_id)?.name||'')}</td><td><button class="btn sm warn" data-kidel="${i.id}">Прибрати</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Шаблон порожній.</td></tr>'}
+      </tbody></table>
+      <div class="acts"><button class="btn sm warn" data-kitdel="${k.id}">Видалити шаблон</button></div>`:''}</div>`};
+  const schRow=x=>{const g=grp(x.current_group_id);
+    return `<div class="cr"><div class="crm"><b>${esc(x.name)}</b><small>Наступна: ${ddmm(x.next_date)}${g?' · поточна група: «'+esc(g.name)+'»':''}${x.category_id&&cat(x.category_id)?` · нові заявки з категорією «${esc(cat(x.category_id).name)}» потрапляють у поточну групу`:''}</small></div>
+      <label class="mini">Шаблон<select data-schf="kit_id" data-sid="${x.id}"><option value="">— без шаблону</option>${opts(D.kits.map(k=>[k.id,k.name]),x.kit_id||'')}</select></label>
+      <label class="mini">Кожні, днів<input type="number" min="1" max="365" data-schf="every_days" data-sid="${x.id}" value="${x.every_days}"></label>
+      <label class="mini">Наступна дата<input type="date" data-schf="next_date" data-sid="${x.id}" value="${esc(x.next_date)}"></label>
+      <label class="mini">Категорія<select data-schf="category_id" data-sid="${x.id}"><option value="">—</option>${opts(D.cats.map(c=>[c.id,c.name]),x.category_id||'')}</select></label>
+      <label class="mini chkl"><input type="checkbox" data-schf="active" data-sid="${x.id}" ${x.active!==false?'checked':''}> Увімкнено</label>
+      <button class="btn sm" data-schrun="${x.id}">Створити зараз</button><button class="btn sm warn" data-schdel="${x.id}">Видалити</button></div>`};
+  return `<main>
+    <h1>Шаблони</h1>
+    <p class="sub">Шаблон — це набір позицій, з якого заявки створюються в один клік, з множником (наприклад, «× 6 ліній»). Щоб створити шаблон, відкрийте групу в «Заявках» і натисніть «Зберегти як шаблон».</p>
+    ${D.kits.map(kitRow).join('')||'<p class="hint">Шаблонів ще немає.</p>'}
+    <h2 class="ch">Регулярні закупівлі</h2>
+    <p class="hint" style="margin:0 0 10px">У потрібний день у «Заявках» з'явиться нагадування з кнопкою «Створити групу». Якщо вказати категорію, нові заявки співробітників з цією категорією самі потраплятимуть у поточну групу закупівлі.</p>
+    ${D.sch.map(schRow).join('')}
+    <form id="nschf" class="box"><legend>Нова регулярна закупівля</legend>
+      <div class="two"><label class="f">Назва<input id="ns-n" placeholder="Напр.: Госптовари"></label><label class="f">Шаблон<select id="ns-k"><option value="">— без шаблону</option>${opts(D.kits.map(k=>[k.id,k.name]))}</select></label></div>
+      <div class="two"><label class="f">Кожні, днів<input id="ns-e" type="number" min="1" max="365" value="14"></label><label class="f">Перша дата<input id="ns-d" type="date" value="${today()}"></label></div>
+      <label class="f">Категорія для автопотрапляння заявок (необов'язково)<select id="ns-c"><option value="">—</option>${opts(D.cats.map(c=>[c.id,c.name]))}</select></label>
+      <p class="err" id="ns-err"></p><div class="acts"><button class="btn pri">Додати</button></div></form>
+  </main>`;
+}
+const paidDate=r=>{if(r.paid_on)return r.paid_on;const h=r.hist||[];const e=h.find(x=>x.s==='paid')||h.find(x=>x.s==='pay')||h.find(x=>x.s==='got');return ld(e?e.t:r.created_at)};
+function repView(){
+  const mon=U.repM||today().slice(0,7),[y,m]=mon.split('-').map(Number);
+  const inM=D.requests.filter(r=>['pay','paid','got'].includes(r.status)&&paidDate(r).slice(0,7)===mon);
+  const withSum=inM.filter(r=>+r.amount>0),total=withSum.reduce((t,r)=>t+ +r.amount,0),noSum=inM.length-withSum.length;
+  const block=(title,keyFn)=>{const mp=new Map();withSum.forEach(r=>{const k=keyFn(r)||'Не вказано';mp.set(k,(mp.get(k)||0)+ +r.amount)});const arr=[...mp].sort((a,b)=>b[1]-a[1]),mx=arr[0]?.[1]||1;
+    return `<section class="rb"><h2 class="ch">${title}</h2>${arr.map(([k,v])=>`<div class="bar2"><span>${esc(k)}</span><i style="width:${Math.max(2,Math.round(v/mx*100))}%"></i><b>${money(v)}</b></div>`).join('')||'<p class="hint">Немає даних.</p>'}</section>`};
+  const name=new Date(y,m-1,1,12).toLocaleDateString('uk-UA',{month:'long',year:'numeric'});
+  return `<main><h1>Звіт про витрати</h1>
+    <div class="calnav"><button class="btn sm" data-repm="-1" aria-label="Попередній місяць">←</button><b>${name}</b><button class="btn sm" data-repm="1" aria-label="Наступний місяць">→</button></div>
+    <div class="kpis"><div class="kpi"><b>${money(total)||'0 грн'}</b>оплачено за місяць</div><div class="kpi"><b>${withSum.length}</b>позицій із сумою</div>${noSum?`<div class="kpi"><b class="late">${noSum}</b>без суми — у звіт не потрапили</div>`:''}</div>
+    <p class="hint" style="margin:0 0 6px">Рахуються заявки зі статусом «Подав на оплату», «Оплачено» чи «Отримано», за датою оплати.</p>
+    <div class="rgrid">${block('За категоріями',r=>cat(r.category_id)?.name)}${block('За постачальниками',r=>sup(r.sup_id)?.name)}${block('За групами',r=>grp(r.group_id)?.name)}${block('За відділами / локаціями',r=>r.author_dept)}</div>
+  </main>`;
+}
+function orderText(ids){
+  const rs=D.requests.filter(r=>ids.includes(r.id));
+  const lines=aggregate(rs).map((g,i)=>`${i+1}. ${g.rs[0].title}${g.rs[0].url?' — '+g.rs[0].url:''} — ${fq(g.tot)} ${g.rs[0].unit}`);
+  return `Добрий день! Прошу виставити рахунок:\n${lines.join('\n')}\nДякую!`;
+}
+function showText(t){
+  $('#ov').innerHTML=`<div class="ovl center" data-close><div class="panel"><h2>Текст замовлення</h2><p class="sub" style="margin:0">Скопіюйте вручну: Ctrl+A, Ctrl+C.</p><textarea class="f" id="ot" style="width:100%;min-height:240px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px">${esc(t)}</textarea><div class="acts"><button type="button" class="btn" data-x>Закрити</button></div></div></div>`;
+  M={kind:'text'};$('#ot').select();
+}
+function dupHint(it){
+  const box=it.querySelector('.dup');if(!box)return;
+  const t=it.querySelector('.it-t').value.trim(),u=it.querySelector('.it-u').value.trim(),un=it.querySelector('.it-un').value;
+  if(!t&&!u){box.innerHTML='';return}
+  const k=itemKey({title:t,url:u||null,pos_id:it.dataset.pos||null,unit:un});
+  const ex=D.requests.filter(r=>r.status==='new'&&itemKey(r)===k);
+  box.innerHTML=ex.length?`<small>⚠ Вже є незамовлена заявка: ${ex.slice(0,3).map(r=>`${esc(r.author_name)} — ${fq(r.qty)} ${esc(r.unit)}`).join('; ')}${ex.length>3?' …':''}. Можна не дублювати.</small>`:'';
+}
+function loadXLSX(){return window.XLSX?Promise.resolve(window.XLSX):new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=()=>res(window.XLSX);sc.onerror=()=>rej(new Error('Не вдалося завантажити модуль Excel'));document.head.append(sc)})}
+async function exportXlsx(ids){
+  const X=await loadXLSX();
+  const rs=D.requests.filter(r=>ids.includes(r.id));
+  const data=rs.map(r=>({'Позиція':r.title,'Посилання':r.url||'','К-сть':+r.qty,'Од.':r.unit,'Хто':r.author_name,'Відділ / локація':r.author_dept||'','Група':grp(r.group_id)?.name||'','Категорія':cat(r.category_id)?.name||'','Постачальник':sup(r.sup_id)?.name||'','Статус':stT(r.status),'Рахунок №':r.inv||'','Сума, грн':r.amount==null?'':+r.amount,'ВН №':r.vn||'','Чим їде':r.car||'','ТТН':r.ttn||'','Очікується':r.eta?r.eta.split('-').reverse().join('.'):'','Умови оплати':termsTxt(r),'Сплатити до':r.pay_due?r.pay_due.split('-').reverse().join('.'):'','Сплачено':r.paid_on?r.paid_on.split('-').reverse().join('.'):'','Створено':new Date(r.created_at).toLocaleDateString('uk-UA'),'Коментар':r.note||'','Мої нотатки':r.adm||''}));
+  const ws=X.utils.json_to_sheet(data);ws['!cols']=[{wch:40},{wch:30},{wch:8},{wch:7},{wch:18},{wch:18},{wch:20},{wch:16},{wch:22},{wch:16},{wch:12},{wch:12},{wch:10},{wch:14},{wch:16},{wch:11},{wch:22},{wch:11},{wch:11},{wch:11},{wch:30},{wch:30}];
+  const wb=X.utils.book_new();X.utils.book_append_sheet(wb,ws,'Заявки');
+  const nm=(U.group!=='all'&&grp(U.group)?grp(U.group).name:'Заявки')+' '+new Date().toLocaleDateString('uk-UA');
+  X.writeFile(wb,nm.replace(/[\\/:*?"<>|]/g,'_')+'.xlsx');
+}
+function invBox(){
+  const rs=D.requests.filter(r=>U.sel.has(r.id));if(!rs.length)return;
+  M={kind:'inv',ids:rs.map(r=>r.id)};
+  const priced=rs.every(r=>posOf(r)?.price);
+  $('#ov').innerHTML=`<div class="ovl center" data-close><form class="panel" id="invf"><h2>Один рахунок на ${rs.length} заявок</h2>
+    <p class="sub" style="margin:0">${rs.slice(0,4).map(r=>esc(r.title)).join(', ')}${rs.length>4?' …':''}</p>
+    <label class="f">Рахунок №<input id="iv-n"></label>
+    <label class="f">Загальна сума, грн (необов'язково)<input id="iv-s" type="number" step="0.01" min="0"></label>
+    <p class="hint" style="margin:6px 0 0">Сума розділиться ${priced?'пропорційно до каталожної ціни × кількість':'пропорційно до кількості'}. Залишок від округлення піде на останню позицію.</p>
+    <label class="f">Сплатити до (для відстрочки, необов'язково)<input id="iv-due" type="date"></label>
+    <label class="f">Статус<select id="iv-st"><option value="">Не змінювати</option>${opts(ST.filter(x=>x.k!=='new').map(x=>[x.k,x.t]),'pay')}</select></label>
+    <p class="err" id="iv-err"></p>
+    <div class="acts"><button class="btn pri" id="iv-go">Застосувати</button><button type="button" class="btn" data-x>Скасувати</button></div></form></div>`;
+  $('#iv-n').focus();
+}
 function catView(){
   let list=D.positions.slice();
   if(U.sq){const t=U.sq.toLowerCase();list=list.filter(p=>(p.title+' '+(p.url||'')).toLowerCase().includes(t))}
@@ -475,6 +740,7 @@ function itemHtml(pre){
     <div class="cres"></div>
     <label class="f">Назва *<input class="it-t" value="${esc(pre?.title||'')}"></label>
     <label class="f">Посилання<input class="it-u" type="url" placeholder="https://…" value="${esc(pre?.url||'')}"></label>
+    <div class="dup"></div>
     <div class="picked">${isA&&pre?.sup?'Постачальник: '+esc(sup(pre.sup)?.name||''):pre?'Вибрано з каталогу':''}</div>
     <div class="two"><label class="f">Кількість *<input class="it-q" type="number" min="0.01" step="any" inputmode="decimal" value="${pre?.qty??''}"></label>
     <label class="f">Одиниця<select class="it-un">${opts(UNITS.map(x=>[x,x]),pre?.unit||'шт')}</select></label></div>
@@ -525,7 +791,14 @@ function openReq(id){
       <label class="f">Видаткова накладна (ВН) №<input id="e-vn" value="${esc(r.vn)}"></label>
       <div class="two"><label class="f">Чим їде<select id="e-car"><option value="">—</option>${opts(CAR.map(c=>[c,c]),r.car)}</select></label><label class="f">ТТН / трек<input id="e-ttn" value="${esc(r.ttn)}" inputmode="numeric"></label></div>
       <label class="f">Очікується (дата)<input id="e-eta" type="date" value="${esc(r.eta||'')}"></label>
-      <label class="f">Мої нотатки<textarea id="e-adm">${esc(r.adm)}</textarea></label></fieldset>`
+      <label class="f">Мої нотатки<textarea id="e-adm">${esc(r.adm)}</textarea></label></fieldset>
+      <fieldset class="box"><legend>Оплата</legend>
+      <div class="two"><label class="f">Умови<select id="e-pt"><option value="">Як у постачальника (${esc(PT[sup(r.sup_id)?.pay_terms||'pre'])})</option>${opts(Object.entries(PT),r.pay_terms||'')}</select></label>
+      <label class="f">Днів відстрочки<input id="e-pd" type="number" min="0" max="365" value="${r.pay_days??''}" placeholder="${sup(r.sup_id)?.pay_days??0}"></label></div>
+      <div class="two"><label class="f">Сплатити до<input id="e-due" type="date" value="${esc(r.pay_due||'')}"></label>
+      <label class="f">Передоплату внесено<input id="e-pre" type="date" value="${esc(r.prepaid_on||'')}"></label></div>
+      <label class="f">Сплачено повністю<input id="e-paid" type="date" value="${esc(r.paid_on||'')}"></label>
+      <p class="hint" style="margin:6px 0 0">Зараз: ${esc(termsTxt(r))}. При статусі «Отримано» з відстрочкою дата «Сплатити до» поставиться сама.</p></fieldset>`
     :`<fieldset class="box"><legend>Статус</legend><p><span class="st s-${r.status}">${stT(r.status)}</span></p>${r.car?`<p style="margin:0">Їде: <b>${esc(r.car)}</b>${r.ttn?`, ТТН ${esc(r.ttn)}`:''}</p>`:''}${r.eta&&r.status!=='got'?`<p style="margin:6px 0 0" class="${isLate(r)?'late':''}">Очікується: <b>${fEta(r.eta)}</b></p>`:''}<p class="hint" style="margin:10px 0 0">Щоб щось змінити в заявці, напишіть у відділ закупівель.</p></fieldset>`}
     ${a?`<ol class="hist"><li>${dtt(r.created_at)}: створено</li>${(r.hist||[]).map(h=>`<li>${dtt(h.t)}: ${stT(h.s)}</li>`).join('')}</ol>`:''}
     <p class="err" id="e-err"></p>
@@ -584,7 +857,26 @@ document.addEventListener('click',e=>{
   if(c('[data-clrsel]')){U.sel.clear();render();return}
   if(c('[data-additem]')){$('#items').insertAdjacentHTML('beforeend',itemHtml());renumber();[...document.querySelectorAll('#items .cq')].pop().focus();return}
   if(el=c('[data-rmitem]')){el.closest('.item').remove();renumber();return}
-  if(el=c('[data-pick]')){const p=D.positions.find(x=>x.id===el.dataset.pick),it=el.closest('.item');it.querySelector('.it-t').value=p.title;it.querySelector('.it-u').value=p.url;it.querySelector('.it-un').value=p.unit;it.dataset.sup=p.sup_id||'';it.dataset.pos=p.id;it.querySelector('.picked').textContent=isA?'Постачальник: '+(sup(p.sup_id)?.name||''):'Вибрано з каталогу';it.querySelector('.cres').innerHTML='';it.querySelector('.cq').value='';it.querySelector('.it-q').focus();return}
+  if(el=c('[data-pick]')){const p=D.positions.find(x=>x.id===el.dataset.pick),it=el.closest('.item');it.querySelector('.it-t').value=p.title;it.querySelector('.it-u').value=p.url;it.querySelector('.it-un').value=p.unit;it.dataset.sup=p.sup_id||'';it.dataset.pos=p.id;it.querySelector('.picked').textContent=isA?'Постачальник: '+(sup(p.sup_id)?.name||''):'Вибрано з каталогу';it.querySelector('.cres').innerHTML='';it.querySelector('.cq').value='';dupHint(it);it.querySelector('.it-q').focus();return}
+  if(el=c('[data-savekit]')){const g=grp(el.dataset.savekit);M={kind:'savekit',gid:g.id};$('#ov').innerHTML=`<div class="ovl center" data-close><form class="panel" id="skf"><h2>Зберегти групу як шаблон</h2><p class="sub" style="margin:0">«${esc(g.name)}», ${D.requests.filter(r=>r.group_id===g.id).length} заявок</p><label class="f">Назва шаблону<input id="sk-n" value="${esc(g.name.replace(/\s*\d{2}\.\d{2}(\.\d{2,4})?\s*$/,'').trim())}"></label><label class="f">Поділити кількість на<input id="sk-d" type="number" min="1" step="any" value="1"></label><p class="hint" style="margin:6px 0 0">Наприклад, група на 9 ліній, а шаблон має бути на одну лінію: введіть 9. Потім при створенні заявок вкажете множник.</p><p class="err" id="sk-err"></p><div class="acts"><button class="btn pri" id="sk-go">Зберегти шаблон</button><button type="button" class="btn" data-x>Скасувати</button></div></form></div>`;$('#sk-n').focus();return}
+  if(el=c('[data-kituse]')){const k=D.kits.find(x=>x.id===el.dataset.kituse);M={kind:'kituse',kid:k.id};$('#ov').innerHTML=`<div class="ovl center" data-close><form class="panel" id="kuf"><h2>Заявки з шаблону</h2><p class="sub" style="margin:0">«${esc(k.name)}», ${kitItems(k.id).length} позицій</p><label class="f">Множник (скільки комплектів, наприклад ліній)<input id="ku-m" type="number" min="0.01" step="any" value="1"></label><label class="f">Назва нової групи<input id="ku-n" value="${esc(k.name+' '+ddmm(today()))}"></label><p class="err" id="ku-err"></p><div class="acts"><button class="btn pri" id="ku-go">Створити заявки</button><button type="button" class="btn" data-x>Скасувати</button></div></form></div>`;$('#ku-m').focus();return}
+  if(el=c('[data-kitopen]')){U.kit=U.kit===el.dataset.kitopen?null:el.dataset.kitopen;render();return}
+  if(el=c('[data-kidel]')){const id=el.dataset.kidel;act(()=>q(sb.from(T.kitI).delete().eq('id',id)),'Позицію прибрано з шаблону');return}
+  if(el=c('[data-kitdel]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно видалити шаблон?';return}const id=el.dataset.kitdel;U.kit=null;act(()=>q(sb.from(T.kit).delete().eq('id',id)),'Шаблон видалено');return}
+  if(el=c('[data-schrun]')){const x=D.sch.find(y=>y.id===el.dataset.schrun);el.disabled=true;act(async()=>{const g=await runSchedule(x);U.tab='req';U.group=g.id;U.status='all'},`Створено групу «${x.name} ${ddmm(today())}»`);return}
+  if(el=c('[data-schskip]')){const x=D.sch.find(y=>y.id===el.dataset.schskip);act(()=>q(sb.from(T.sch).update({next_date:nextAfter(x.next_date,x.every_days)}).eq('id',x.id)),'Перенесено на наступний раз');return}
+  if(el=c('[data-schdel]')){if(!el.dataset.armed){el.dataset.armed=1;el.textContent='Точно?';return}const id=el.dataset.schdel;act(()=>q(sb.from(T.sch).delete().eq('id',id)),'Регулярну закупівлю видалено');return}
+  if(el=c('[data-repm]')){const v=+el.dataset.repm,[y,m]=(U.repM||today().slice(0,7)).split('-').map(Number);U.repM=ld(new Date(y,m-1+v,1,12)).slice(0,7);render();return}
+  if(el=c('[data-copyord]')){const t=orderText((el.dataset.ids||'').split(',').filter(Boolean));try{navigator.clipboard.writeText(t).then(()=>toast('Замовлення скопійовано, вставте у Viber чи пошту'),()=>showText(t))}catch(e2){showText(t)}return}
+  if(c('[data-export]')){toast('Готую файл…');exportXlsx(U.vis||[]).catch(e2=>toast('Помилка: '+(e2.message||e2)));return}
+  if(c('[data-binv]')){invBox();return}
+  if(el=c('[data-calmode]')){U.calMode=el.dataset.calmode;U.calD=null;render();return}
+  if(el=c('[data-paidnow]')){const id=el.dataset.paidnow;el.disabled=true;act(()=>q(sb.from(T.req).update({paid_on:today()}).eq('id',id)),'Позначено сплаченим');return}
+  if(el=c('[data-calm]')){const v=+el.dataset.calm;if(!v){U.calM=null;U.calD=null}else{const [y,m]=(U.calM||today().slice(0,7)).split('-').map(Number);const d=new Date(y,m-1+v,1,12);U.calM=ld(d).slice(0,7)}render();return}
+  if(el=c('[data-day]')){U.calD=el.dataset.day;render();return}
+  if(el=c('[data-got]')){const r=D.requests.find(x=>x.id===el.dataset.got);el.disabled=true;act(()=>setStatus([r],'got'),`«${r.title}» отримано`);return}
+  if(el=c('[data-gotday]')){const rs=D.requests.filter(r=>r.eta===el.dataset.gotday&&r.status!=='got');el.disabled=true;act(async()=>{const n=await setStatus(rs,'got');toast(`Отримано: ${n}`)});return}
+  if(el=c('[data-tom]')){const id=el.dataset.tom;act(()=>q(sb.from(T.req).update({eta:addDays(today(),1)}).eq('id',id)),'Перенесено на завтра');return}
   if(c('[data-selall]')){const ids=U.vis||[],all=ids.length&&ids.every(id=>U.sel.has(id));ids.forEach(id=>all?U.sel.delete(id):U.sel.add(id));render();return}
   if(el=c('[data-rep]')){const r=D.requests.find(x=>x.id===el.dataset.rep);if(!r)return;closeOv();newReq({title:r.title,url:r.url||'',sup:r.sup_id,unit:r.unit,pos:r.pos_id,qty:r.qty,note:r.note,cat:r.category_id});return}
   if(el=c('[data-repg]')){repeatBox(el.dataset.repg);return}
@@ -611,8 +903,15 @@ document.addEventListener('change',e=>{
   if(t.id==='by'){U.by=t.value;render();return}
   if(t.dataset.ck){t.checked?U.sel.add(t.dataset.ck):U.sel.delete(t.dataset.ck);render();return}
   if(t.dataset.aggst&&t.value){const ids=U.agg[+t.dataset.aggst]||[],k=t.value,rs=D.requests.filter(r=>ids.includes(r.id));act(async()=>{const n=await setStatus(rs,k);toast(`${n} заявок → «${stT(k)}»`)});return}
+  if(t.dataset.pdue){const id=t.dataset.pdue,v=t.value||null;act(()=>q(sb.from(T.req).update({pay_due:v}).eq('id',id)),'Дату оплати змінено');return}
+  if(t.dataset.eta!==undefined&&t.type==='date'){const id=t.dataset.eta,v=t.value||null;act(()=>q(sb.from(T.req).update({eta:v}).eq('id',id)),v?'Дату очікування змінено':'Дату прибрано');return}
+  if(t.classList.contains('it-un')){dupHint(t.closest('.item'));return}
+  if(t.dataset.kname){const v=t.value.trim();if(!v)return;act(()=>q(sb.from(T.kit).update({name:v}).eq('id',t.dataset.kname)),'Назву змінено');return}
+  if(t.dataset.kiq){const v=+t.value;if(!(v>0)){toast('Кількість має бути більшою за 0');return}act(()=>q(sb.from(T.kitI).update({qty:v}).eq('id',t.dataset.kiq)),'Кількість у шаблоні змінено');return}
+  if(t.dataset.schf){const f=t.dataset.schf,id=t.dataset.sid;let v=f==='active'?t.checked:t.value;if(f==='every_days'){v=Math.round(+v);if(!(v>=1&&v<=365)){toast('Вкажіть від 1 до 365 днів');return}}if(f==='next_date'&&!v){toast('Вкажіть дату');return}if(['kit_id','category_id'].includes(f))v=v||null;act(()=>q(sb.from(T.sch).update({[f]:v}).eq('id',id)),'Збережено');return}
   if(t.dataset.psup){const id=t.dataset.psup,v=t.value||null;act(()=>q(sb.from(T.pos).update({sup_id:v}).eq('id',id)),'Постачальника позиції змінено');return}
   if(t.dataset.rst){const r=D.requests.find(x=>x.id===t.dataset.rst);const k=t.value;act(()=>setStatus([r],k),`«${r.title}» → ${stT(k)}`);return}
+  if(t.id==='bpay'&&t.value){const ids=[...U.sel],v=t.value;U.sel.clear();act(()=>q(sb.from(T.req).update(v==='paidnow'?{paid_on:today()}:{pay_terms:v.slice(2)||null}).in('id',ids)),`Оновлено заявок: ${ids.length}`);return}
   if(['bst','bgr','bsp','bct','bet'].includes(t.id)&&t.value){
     const rs=D.requests.filter(r=>U.sel.has(r.id)),ids=rs.map(r=>r.id),v=t.value,kind=t.id;
     U.sel.clear();
@@ -623,6 +922,7 @@ document.addEventListener('change',e=>{
       if(kind==='bgr')await q(sb.from(T.req).update({group_id:v==='__none'?null:v}).in('id',ids));
       if(kind==='bsp'){await q(sb.from(T.req).update({sup_id:v}).in('id',ids));await Promise.all(rs.filter(r=>r.status!=='new').map(r=>upsertPos({...r,sup_id:v})))}
     },`Оновлено заявок: ${rs.length}`);return}
+  if(t.dataset.sf&&['pay_days','prepay_pct'].includes(t.dataset.sf)){const v=Math.round(+t.value),mx=t.dataset.sf==='pay_days'?365:100;if(!(v>=0&&v<=mx)){toast(`Вкажіть від 0 до ${mx}`);return}const id=U.sup;act(()=>q(sb.from(T.sup).update({[t.dataset.sf]:v}).eq('id',id)),'Збережено');return}
   if(t.dataset.sf){let v=t.value.trim();if(t.dataset.sf==='site')v=v.replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/.*$/,'');const id=U.sup;act(()=>q(sb.from(T.sup).update({[t.dataset.sf]:v}).eq('id',id)),'Збережено')}
 });
 document.addEventListener('input',e=>{
@@ -630,6 +930,7 @@ document.addEventListener('input',e=>{
   if(t.id==='q'){U.q=t.value;render()}
   if(t.id==='sq'){U.sq=t.value;render()}
   if(t.classList.contains('cq'))catalogSearch(t);
+  if(t.classList.contains('it-t')||t.classList.contains('it-u')){const it=t.closest('.item');if(t.classList.contains('it-t')&&it.dataset.pos){const p=D.positions.find(x=>x.id===it.dataset.pos);if(p&&norm(p.title)!==norm(t.value))delete it.dataset.pos}setTimeout(()=>dupHint(it),0)}
   if(t.classList.contains('it-u')){const it=t.closest('.item');it.dataset.sup=guessSup(t.value)||'';it.querySelector('.picked').textContent=isA&&it.dataset.sup?'Постачальник визначено за посиланням: '+(sup(it.dataset.sup)?.name||''):''}
 });
 document.addEventListener('submit',async e=>{
@@ -643,6 +944,36 @@ document.addEventListener('submit',async e=>{
     if(!isA){$('#l-err').textContent='Цей акаунт не має доступу адміністратора.';$('#l-go').disabled=false;return}
     closeOv();U.loading=true;render();loadAll();return}
   if(f.id==='ngf'){const n=val('ngn');if(!n)return;act(async()=>{const g=await q(sb.from(T.grp).insert({name:n}).select().single());U.group=g.id},'Групу створено');return}
+  if(f.id==='skf'){
+    const name=val('sk-n'),dv=+val('sk-d');if(!name){$('#sk-err').textContent='Вкажіть назву.';return}if(!(dv>0)){$('#sk-err').textContent='Дільник має бути більшим за 0.';return}
+    const rs=D.requests.filter(r=>r.group_id===M.gid);if(!rs.length){$('#sk-err').textContent='У групі немає заявок.';return}
+    $('#sk-go').disabled=true;
+    try{const k=await q(sb.from(T.kit).insert({name}).select().single());
+      await q(sb.from(T.kitI).insert(rs.slice().sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).map((r,i)=>({kit_id:k.id,title:r.title,url:r.url||null,pos_id:r.pos_id||null,qty:Math.max(0.01,Math.round(r.qty/dv*100)/100),unit:r.unit,sup_id:r.sup_id||null,category_id:r.category_id||null,note:r.note||'',sort:i}))));U.kit=k.id}
+    catch(e2){$('#sk-err').textContent='Не вдалося: '+(e2.message||e2);$('#sk-go').disabled=false;return}
+    closeOv();U.tab='tpl';toast(`Шаблон «${name}» збережено`);loadAll();return}
+  if(f.id==='kuf'){
+    const m=+val('ku-m'),name=val('ku-n');if(!(m>0)){$('#ku-err').textContent='Множник має бути більшим за 0.';return}if(!name){$('#ku-err').textContent='Вкажіть назву групи.';return}
+    $('#ku-go').disabled=true;
+    try{const g=await kitToGroup(M.kid,m,name);U.group=g.id}catch(e2){$('#ku-err').textContent='Не вдалося: '+(e2.message||e2);$('#ku-go').disabled=false;return}
+    closeOv();U.tab='req';U.status='all';toast(`Створено групу «${name}»`);loadAll();return}
+  if(f.id==='nschf'){
+    const name=val('ns-n'),ev=Math.round(+val('ns-e')),d=val('ns-d');
+    if(!name){$('#ns-err').textContent='Вкажіть назву.';return}if(!(ev>=1&&ev<=365)){$('#ns-err').textContent='Періодичність — від 1 до 365 днів.';return}if(!d){$('#ns-err').textContent='Вкажіть першу дату.';return}
+    act(()=>q(sb.from(T.sch).insert({name,kit_id:val('ns-k')||null,every_days:ev,next_date:d,category_id:val('ns-c')||null})),'Регулярну закупівлю додано');return}
+  if(f.id==='invf'){
+    const n=val('iv-n'),sum=val('iv-s')===''?null:+val('iv-s'),st=val('iv-st');
+    const due=val('iv-due');
+    if(!n&&sum==null&&!st&&!due){$('#iv-err').textContent='Заповніть хоча б одне поле.';return}
+    if(sum!=null&&!(sum>=0)){$('#iv-err').textContent='Сума має бути числом.';return}
+    const rs=D.requests.filter(r=>M.ids.includes(r.id));
+    const priced=rs.every(r=>posOf(r)?.price),w=rs.map(r=>(priced?+posOf(r).price:1)*(+r.qty||0)),W=w.reduce((a,b)=>a+b,0)||1;
+    let left=sum;
+    const patches=rs.map((r,i)=>{const p={};if(n)p.inv=n;if(due)p.pay_due=due;if(sum!=null){const a=i===rs.length-1?Math.round(left*100)/100:Math.round(sum*w[i]/W*100)/100;left-=a;p.amount=a}if(st&&st!==r.status)Object.assign(p,statusPatch(r,st));return p});
+    $('#iv-go').disabled=true;
+    try{await Promise.all(rs.map((r,i)=>q(sb.from(T.req).update(patches[i]).eq('id',r.id))));for(const [i,r] of rs.entries()){const nn={...r,...patches[i]};if(nn.status!=='new'&&(nn.sup_id||!nn.url))await upsertPos(nn)}}
+    catch(e2){$('#iv-err').textContent='Не вдалося: '+(e2.message||e2);$('#iv-go').disabled=false;return}
+    U.sel.clear();closeOv();toast(`Рахунок застосовано до ${rs.length} заявок`);loadAll();return}
   if(f.id==='rpf'){
     const name=val('rp-n'),err=$('#rp-err');if(!name){err.textContent='Вкажіть назву групи.';return}
     const ids=[...document.querySelectorAll('.rp-c:checked')].map(x=>x.dataset.id);if(!ids.length){err.textContent='Виберіть хоча б одну позицію.';return}
@@ -678,8 +1009,11 @@ document.addEventListener('submit',async e=>{
     const r=D.requests.find(x=>x.id===M.id);
     const t=val('e-t'),u=val('e-u'),qn=+val('e-q');
     if(!validate(t,u,qn,'#e-err',undefined,!!r.pos_id))return;
-    const patch={title:t,url:u||null,qty:qn,unit:val('e-un'),note:val('e-n'),group_id:val('e-g')||null,category_id:val('e-c')||null,sup_id:val('e-sp')||null,inv:val('e-inv'),amount:val('e-am')?+val('e-am'):null,vn:val('e-vn'),car:val('e-car'),ttn:val('e-ttn'),eta:val('e-eta')||null,adm:val('e-adm')};
-    const k=val('e-s');if(k!==r.status)Object.assign(patch,statusPatch(r,k));
+    const patch={title:t,url:u||null,qty:qn,unit:val('e-un'),note:val('e-n'),group_id:val('e-g')||null,category_id:val('e-c')||null,sup_id:val('e-sp')||null,inv:val('e-inv'),amount:val('e-am')?+val('e-am'):null,vn:val('e-vn'),car:val('e-car'),ttn:val('e-ttn'),eta:val('e-eta')||null,adm:val('e-adm'),pay_terms:val('e-pt')||null,pay_days:val('e-pd')===''?null:Math.round(+val('e-pd')),pay_due:val('e-due')||null,prepaid_on:val('e-pre')||null,paid_on:val('e-paid')||null};
+    if(patch.pay_days!=null&&!(patch.pay_days>=0&&patch.pay_days<=365)){$('#e-err').textContent='Днів відстрочки — від 0 до 365.';return}
+    let k=val('e-s'),auto=false;
+    if(k===r.status){if(patch.vn&&!r.vn&&k!=='got'){k='got';auto=true}else if(patch.ttn&&!r.ttn&&['new','invoice','pay'].includes(k)){k='paid';auto=true}}
+    if(k!==r.status){const sp=statusPatch({...r,...patch,sup_id:patch.sup_id||r.sup_id},k,patch.eta);if(patch.eta)delete sp.eta;for(const f of ['paid_on','prepaid_on','pay_due'])if(patch[f])delete sp[f];Object.assign(patch,sp)}
     const btn=f.querySelector('.btn.pri');btn.disabled=true;$('#e-err').textContent='';
     try{
       if((patch.status||r.status)!=='new'&&!patch.sup_id)patch.sup_id=D.positions.find(p=>p.id===r.pos_id)?.sup_id||await ensureSup(patch.url);
@@ -687,7 +1021,7 @@ document.addEventListener('submit',async e=>{
       const n={...r,...patch};if(n.status!=='new'&&(n.sup_id||!n.url))await upsertPos(n);
       if(n.status==='new'||n.url!==r.url)await syncPos(r,r.id);
     }catch(err){$('#e-err').textContent='Не вдалося зберегти: '+(err.message||err);btn.disabled=false;return}
-    closeOv();toast('Збережено');loadAll()}
+    closeOv();toast(auto?`Збережено · статус автоматично: «${stT(k)}»`:'Збережено');loadAll()}
 });
 /* перетягування заявок у групи */
 let drag=[];
